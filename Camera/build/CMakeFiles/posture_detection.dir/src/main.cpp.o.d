@@ -813,6 +813,8 @@ CMakeFiles/posture_detection.dir/src/main.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/chrono \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/forward_list \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/csignal \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/signal.h \
   /opt/homebrew/Cellar/opencv/5.0.0/include/opencv5/opencv2/opencv.hpp \
   /opt/homebrew/Cellar/opencv/5.0.0/include/opencv5/opencv2/opencv_modules.hpp \
   /opt/homebrew/Cellar/opencv/5.0.0/include/opencv5/opencv2/core.hpp \
