@@ -2,9 +2,6 @@
 #include "pose_detector.h"
 #include <string>
 
-extern float ref_l;
-extern float ref_r;
-
 // เพิ่มใน angle_calc.h
 struct GaitResult {
     float l_knee_angle,  r_knee_angle;
@@ -22,3 +19,5 @@ struct GaitResult {
 float      calc_angle(const Landmark& a, const Landmark& b, const Landmark& c);
 std::string classify_phase(float knee_angle);
 GaitResult  compute_gait(const std::vector<Landmark>& lm);
+extern float ref_l;
+extern float ref_r;
