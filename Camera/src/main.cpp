@@ -19,6 +19,7 @@ int main(int argc, char* argv[]) {
     }
     cap.set(cv::CAP_PROP_FRAME_WIDTH,  1280);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
+    cap.set(cv::CAP_PROP_FPS, 30);
     std::cout << "Camera opened\n";
     std::cout << "Controls: [Q] Quit  [C] Recalibrate\n";
     std::cout << ">> Stand straight and wait for calibration...\n";
