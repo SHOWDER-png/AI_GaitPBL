@@ -1543,6 +1543,7 @@ CMakeFiles/posture_detection.dir/src/main.cpp.o: /Users/nxnecrx/Desktop/PBL3/Pro
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/compare \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/complex \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/concepts \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/csignal \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/cstdarg \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/cstddef \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/cstdint \
@@ -1633,6 +1634,7 @@ CMakeFiles/posture_detection.dir/src/main.cpp.o: /Users/nxnecrx/Desktop/PBL3/Pro
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/pthread/sched.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/runetype.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sched.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/signal.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/stddef.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/stdint.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/stdio.h \
@@ -2844,6 +2846,8 @@ CMakeFiles/posture_detection.dir/src/pose_detector.cpp.o: /Users/nxnecrx/Desktop
 
 /Users/nxnecrx/Desktop/PBL3/Project_Git/AI_GaitPBL/Camera/src/pose_detector.cpp:
 
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/signal.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/filesystem:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/perms.h:
@@ -3573,6 +3577,8 @@ CMakeFiles/posture_detection.dir/src/pose_detector.cpp.o: /Users/nxnecrx/Desktop
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/integral_constant.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/extent.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/csignal:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/enable_if.h:
 
