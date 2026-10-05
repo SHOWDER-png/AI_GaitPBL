@@ -21,6 +21,10 @@ add_executable(posture_detection
     src/angle_calc.cpp
 )
 
+add_executable(camera_capture src/camera_capture.cpp)
+target_include_directories(camera_capture PRIVATE ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(camera_capture PRIVATE ${OpenCV_LIBS})
+
 # ── Include dirs ──────────────────────────────────────────────
 target_include_directories(posture_detection PRIVATE
     include

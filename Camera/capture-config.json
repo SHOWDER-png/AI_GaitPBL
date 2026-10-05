@@ -1,0 +1,34 @@
+{
+  "status": "pending_physical_capture_and_measurement",
+  "camera": {
+    "model": null,
+    "connection": null,
+    "device_index": 0,
+    "requested_resolution_px": [1280, 720],
+    "requested_frame_rate_fps": 30,
+    "negotiated_resolution_px": null,
+    "backend_reported_frame_rate_fps": null,
+    "effective_saved_frame_rate_fps": null,
+    "exposure_mode_and_value": null,
+    "lighting_conditions": null
+  },
+  "placement": {
+    "mounting_height_cm": null,
+    "camera_to_subject_distance_cm": null,
+    "viewing_direction": null,
+    "lower_body_and_feet_visible": null,
+    "existing_application_guidance": {
+      "mounting_height_cm": [90, 100],
+      "distance_cm": [200, 300],
+      "view": "front"
+    }
+  },
+  "capture": {
+    "seconds_per_phase": 8,
+    "phase_order": ["standing", "walking", "no_person"],
+    "image_format": "PNG",
+    "raw_capture_directory": "Camera/captures/ (ignored by Git)",
+    "metadata_file": "frames.csv",
+    "drop_count_method": "Estimated from monotonic frame timestamp gaps versus requested frame period; not a sensor-level counter."
+  }
+}

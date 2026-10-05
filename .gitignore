@@ -11,6 +11,8 @@ posture_detection
 *.csv
 validation_report.txt
 
+Camera/captures/
+
 .vscode/
 .idea/
 *.user
