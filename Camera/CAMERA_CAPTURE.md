@@ -4,12 +4,12 @@ This capture utility is independent of pose inference, the IMU, BLE, and the i.M
 
 ## Build and Check
 
-Open the `Camera` folder in VS Code so CMake Tools uses its `CMakeLists.txt` as the project root. Run **CMake: Select a Kit**, then **CMake: Configure**, choose `camera_capture` as the build target, and run **CMake: Build**. The executable is produced in the configured build directory (the existing local setup uses `Camera/build/`).
+In the repository-root VS Code workspace, CMake Tools is configured to use `Camera/CMakeLists.txt`. Run **CMake: Select a Kit**, then **CMake: Configure**, choose `camera_capture` as the build target, and run **CMake: Build**. With the current workspace configuration, the executable is `build/camera_capture` at the repository root. If you open `Camera` as a separate workspace folder, it will instead be `Camera/build/camera_capture` from the repository root.
 
 First ask the utility to open the camera and read one frame without saving:
 
 ```sh
-./Camera/build/camera_capture --check --device 0 --width 1280 --height 720 --fps 30
+./build/camera_capture --check --device 0 --width 1280 --height 720 --fps 30
 ```
 
 It prints the requested settings, backend-reported settings, first-frame dimensions, and the backend exposure property where available. A mismatch is printed as a limitation; the stage summary later reports observed FPS. Open failure and first-frame failure are non-zero errors with actionable messages.
@@ -19,7 +19,7 @@ It prints the requested settings, backend-reported settings, first-frame dimensi
 Use a new output path for each run. Existing output paths are never overwritten.
 
 ```sh
-./Camera/build/camera_capture \
+./build/camera_capture \
   --device 0 --width 1280 --height 720 --fps 30 --seconds 8 \
   --output "Camera/captures/SCRUM-370-$(date +%Y%m%d-%H%M%S)"
 ```

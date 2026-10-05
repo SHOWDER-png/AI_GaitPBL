@@ -6,10 +6,10 @@
     "device_index": 0,
     "requested_resolution_px": [1280, 720],
     "requested_frame_rate_fps": 30,
-    "negotiated_resolution_px": null,
-    "backend_reported_frame_rate_fps": null,
+    "negotiated_resolution_px": [1280, 720],
+    "backend_reported_frame_rate_fps": 30,
     "effective_saved_frame_rate_fps": null,
-    "exposure_mode_and_value": null,
+    "exposure_mode_and_value": "Unavailable from OpenCV backend (CAP_PROP_EXPOSURE=-1)",
     "lighting_conditions": null
   },
   "placement": {
