@@ -1,5 +1,5 @@
 {
-  "status": "pending_physical_capture_and_measurement",
+  "status": "capture_complete_framing_and_fixture_review_incomplete",
   "camera": {
     "model": null,
     "connection": null,
@@ -8,15 +8,20 @@
     "requested_frame_rate_fps": 30,
     "negotiated_resolution_px": [1280, 720],
     "backend_reported_frame_rate_fps": 30,
-    "effective_saved_frame_rate_fps": null,
+    "effective_saved_frame_rate_fps": {
+      "standing": 27.17,
+      "walking": 24.39,
+      "no_person": 25.88
+    },
     "exposure_mode_and_value": "Unavailable from OpenCV backend (CAP_PROP_EXPOSURE=-1)",
     "lighting_conditions": null
   },
   "placement": {
     "mounting_height_cm": null,
     "camera_to_subject_distance_cm": null,
-    "viewing_direction": null,
-    "lower_body_and_feet_visible": null,
+    "viewing_direction": "Front-facing (observed)",
+    "lower_body_and_feet_visible": false,
+    "visual_review": "Sampled walking frames show the subject near the left edge early and feet clipped at the bottom near the end; do not use this placement as validated framing. Move the camera farther back, center the walking path, and recapture.",
     "existing_application_guidance": {
       "mounting_height_cm": [90, 100],
       "distance_cm": [200, 300],
@@ -26,6 +31,28 @@
   "capture": {
     "seconds_per_phase": 8,
     "phase_order": ["standing", "walking", "no_person"],
+    "latest_run": {
+      "directory": "Camera/captures/SCRUM-370-20261005-185859",
+      "frame_counts": {
+        "standing": 218,
+        "walking": 196,
+        "no_person": 207
+      },
+      "resolution_px": [1280, 720],
+      "phase_duration_seconds_approx": {
+        "standing": 7.99,
+        "walking": 7.99,
+        "no_person": 7.96
+      },
+      "estimated_dropped_frames": {
+        "standing": 23,
+        "walking": 45,
+        "no_person": 33,
+        "total": 101
+      },
+      "frame_indices_monotonic": true,
+      "notes": "All metadata rows report 1280x720. Effective saved-frame rate includes file-write time; estimated drops are inferred from inter-frame gaps, not a sensor counter."
+    },
     "image_format": "PNG",
     "raw_capture_directory": "Camera/captures/ (ignored by Git)",
     "metadata_file": "frames.csv",
