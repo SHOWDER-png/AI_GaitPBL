@@ -9,9 +9,9 @@
     "negotiated_resolution_px": [1280, 720],
     "backend_reported_frame_rate_fps": 30,
     "effective_saved_frame_rate_fps": {
-      "standing": 27.17,
-      "walking": 24.39,
-      "no_person": 25.88
+      "standing": 20.62,
+      "walking": 22.61,
+      "no_person": 23.03
     },
     "exposure_mode_and_value": "Unavailable from OpenCV backend (CAP_PROP_EXPOSURE=-1)",
     "lighting_conditions": null
@@ -21,7 +21,7 @@
     "camera_to_subject_distance_cm": null,
     "viewing_direction": "Front-facing (observed)",
     "lower_body_and_feet_visible": null,
-    "visual_review": "In the remaining walking images reviewed, the subject is centered and both feet are within frame at far, middle, and near distances. Full-phase framing cannot be confirmed because walking frames 166-250 were deleted after capture and are still listed in frames.csv.",
+    "visual_review": "Reviewed walking samples at far, middle, and near distances show the subject centered with both feet in frame. All walking image files are currently present. The first 22 standing images are still missing, so the original run is not fully intact.",
     "existing_application_guidance": {
       "mounting_height_cm": [90, 100],
       "distance_cm": [200, 300],
@@ -33,26 +33,28 @@
     "phase_order": ["standing", "walking", "no_person"],
     "latest_run": {
       "directory": "Camera/captures/SCRUM-370-20261006-123844",
-      "metadata_rows_before_manual_deletion": {
+      "original_metadata_rows": {
         "standing": 165,
         "walking": 181,
         "no_person": 185,
         "total": 531
       },
-      "remaining_png_files": {
+      "currently_present_png_files": {
         "standing": 143,
-        "walking": 96,
+        "walking": 181,
         "no_person": 185,
-        "total": 424
+        "total": 509
       },
-      "deleted_images_still_referenced_in_frames_csv": {
+      "missing_images_still_referenced_in_frames_csv": {
         "standing_count": 22,
         "standing_frame_indices": "1-22",
-        "walking_count": 85,
-        "walking_frame_indices": "166-250",
+        "walking_count": 0,
+        "walking_frame_indices": null,
         "no_person_count": 0,
-        "total": 107
+        "total": 22
       },
+      "available_manifest": "Camera/captures/SCRUM-370-20261006-123844/frames_available.csv",
+      "available_manifest_rows": 509,
       "resolution_px": [1280, 720],
       "phase_duration_seconds_approx": {
         "standing": 7.952,
@@ -71,7 +73,7 @@
         "total": 190
       },
       "frame_indices_monotonic": true,
-      "notes": "All metadata rows report 1280x720 and indices are strictly increasing. 107 image files were manually deleted but their rows remain in frames.csv; the CSV is the original capture log and is not consistent with the files currently present. Rates are computed from original metadata rows before considering deletions. Drop counts are gap-based estimates, not sensor counters."
+      "notes": "All original metadata rows report 1280x720 and indices are strictly increasing. The original frames.csv retains all 531 capture records. The derived frames_available.csv contains the 509 rows whose PNG files currently exist; only standing indices 1-22 are absent. Rates are computed from original metadata rows before deletions. Drop counts are gap-based estimates, not sensor counters."
     },
     "image_format": "PNG",
     "raw_capture_directory": "Camera/captures/ (ignored by Git)",
