@@ -3,9 +3,17 @@
 #include <sstream>
 #include <chrono>
 #include <csignal>
+#include <cmath>
+#include <filesystem>
+#include <iomanip>
+#include <stdexcept>
+#include <unordered_map>
+#include <utility>
 #include <opencv2/opencv.hpp>
 #include "pose_detector.h"
 #include "angle_calc.h"
+#include "offline_inference.h"
+#include "offline_validation.h"
 
 volatile sig_atomic_t g_running = 1;
 void signal_handler(int) { g_running = 0; }
@@ -52,9 +60,341 @@ TestResult evaluate_test(
     return t;
 }
 
+namespace {
+
+struct OfflineOptions {
+    std::filesystem::path manifest = "fixtures/manifest.csv";
+    std::filesystem::path output_prefix = "offline-inference";
+    float person_threshold = 0.3f;
+    float keypoint_threshold = 0.5f;
+};
+
+struct Fixture {
+    std::string path;
+    std::string phase;
+    std::string frame_id;
+    std::string source_run;
+    int expected_width = 0;
+    int expected_height = 0;
+};
+
+bool parse_csv_row(const std::string& line, std::vector<std::string>& fields) {
+    fields.clear();
+    std::string field;
+    bool quoted = false;
+    for (std::size_t i = 0; i < line.size(); ++i) {
+        const char ch = line[i];
+        if (quoted) {
+            if (ch == '"' && i + 1 < line.size() && line[i + 1] == '"') {
+                field += '"';
+                ++i;
+            } else if (ch == '"') {
+                quoted = false;
+            } else {
+                field += ch;
+            }
+        } else if (ch == ',' ) {
+            fields.push_back(field);
+            field.clear();
+        } else if (ch == '"' && field.empty()) {
+            quoted = true;
+        } else {
+            field += ch;
+        }
+    }
+    if (quoted) return false;
+    fields.push_back(field);
+    return true;
+}
+
+std::vector<Fixture> read_fixtures(const std::filesystem::path& manifest) {
+    std::ifstream input(manifest);
+    if (!input) {
+        throw std::runtime_error("Cannot open fixture manifest: "
+                                 + manifest.string());
+    }
+
+    std::string line;
+    if (!std::getline(input, line)) {
+        throw std::runtime_error("Fixture manifest is empty: "
+                                 + manifest.string());
+    }
+    std::vector<std::string> header;
+    if (!parse_csv_row(line, header)) {
+        throw std::runtime_error("Invalid CSV header in: " + manifest.string());
+    }
+    std::unordered_map<std::string, std::size_t> columns;
+    for (std::size_t i = 0; i < header.size(); ++i) columns[header[i]] = i;
+    for (const char* required_column :
+         {"fixture_path", "phase", "source_frame_index"}) {
+        const std::string required(required_column);
+        if (columns.find(required) == columns.end()) {
+            throw std::runtime_error("Fixture manifest lacks required column '"
+                                     + required + "'");
+        }
+    }
+
+    const auto value = [&columns](const std::vector<std::string>& row,
+                                  const std::string& name) -> std::string {
+        const auto column = columns.find(name);
+        if (column == columns.end() || column->second >= row.size()) return {};
+        return row[column->second];
+    };
+
+    std::vector<Fixture> fixtures;
+    std::size_t line_number = 1;
+    while (std::getline(input, line)) {
+        ++line_number;
+        if (line.empty()) continue;
+        std::vector<std::string> row;
+        if (!parse_csv_row(line, row)) {
+            throw std::runtime_error("Invalid CSV quoting at " + manifest.string()
+                                     + ":" + std::to_string(line_number));
+        }
+        Fixture fixture;
+        fixture.path = value(row, "fixture_path");
+        fixture.phase = value(row, "phase");
+        fixture.frame_id = value(row, "source_frame_index");
+        fixture.source_run = value(row, "source_run");
+        const std::string width = value(row, "width");
+        const std::string height = value(row, "height");
+        if (!width.empty()) fixture.expected_width = std::stoi(width);
+        if (!height.empty()) fixture.expected_height = std::stoi(height);
+        if (fixture.path.empty() || fixture.phase.empty()
+            || fixture.frame_id.empty()) {
+            throw std::runtime_error("Missing fixture path, phase, or frame id at "
+                                     + manifest.string() + ":"
+                                     + std::to_string(line_number));
+        }
+        fixtures.push_back(std::move(fixture));
+    }
+    if (fixtures.empty()) {
+        throw std::runtime_error("Fixture manifest has no fixture rows: "
+                                 + manifest.string());
+    }
+    return fixtures;
+}
+
+float parse_threshold(const std::string& text, const std::string& option) {
+    std::size_t parsed = 0;
+    float threshold = 0.0f;
+    try {
+        threshold = std::stof(text, &parsed);
+    } catch (const std::exception&) {
+        throw std::runtime_error("Invalid value for " + option + ": " + text);
+    }
+    if (parsed != text.size() || !std::isfinite(threshold)
+        || threshold < 0.0f || threshold > 1.0f) {
+        throw std::runtime_error(option + " must be a number from 0 to 1");
+    }
+    return threshold;
+}
+
+OfflineOptions parse_offline_options(int argc, char* argv[]) {
+    OfflineOptions options;
+    for (int i = 2; i < argc; ++i) {
+        const std::string arg = argv[i];
+        if (i + 1 >= argc) {
+            throw std::runtime_error("Missing value after " + arg);
+        }
+        const std::string value = argv[++i];
+        if (arg == "--manifest") options.manifest = value;
+        else if (arg == "--output") options.output_prefix = value;
+        else if (arg == "--threshold") {
+            options.person_threshold = parse_threshold(value, arg);
+        } else if (arg == "--keypoint-threshold") {
+            options.keypoint_threshold = parse_threshold(value, arg);
+        } else {
+            throw std::runtime_error("Unknown offline option: " + arg);
+        }
+    }
+    return options;
+}
+
+void write_error_record(
+    std::ostream& output, const Fixture& fixture,
+    const std::string& image_path, const std::string& error)
+{
+    output << "{\"record_type\":\"error\",\"fixture_path\":\""
+           << json_escape(fixture.path) << "\",\"image_path\":\""
+           << json_escape(image_path) << "\",\"phase\":\""
+           << json_escape(fixture.phase) << "\",\"frame_id\":\""
+           << json_escape(fixture.frame_id) << "\",\"error\":\""
+           << json_escape(error) << "\",\"detection_valid\":null}\n";
+}
+
+int run_offline(const OfflineOptions& options, const std::string& model_path) {
+    const std::filesystem::path manifest_path =
+        std::filesystem::absolute(options.manifest);
+    const std::vector<Fixture> fixtures = read_fixtures(manifest_path);
+    const std::filesystem::path model_file(model_path);
+    if (!std::filesystem::is_regular_file(model_file)) {
+        throw std::runtime_error("Model file not found: "
+                                 + std::filesystem::absolute(model_file).string());
+    }
+
+    const std::filesystem::path raw_path =
+        options.output_prefix.string() + ".jsonl";
+    const std::filesystem::path summary_path =
+        options.output_prefix.string() + "-summary.json";
+    if (raw_path.has_parent_path()) {
+        std::filesystem::create_directories(raw_path.parent_path());
+    }
+    if (summary_path.has_parent_path()) {
+        std::filesystem::create_directories(summary_path.parent_path());
+    }
+    std::ofstream raw(raw_path);
+    if (!raw) throw std::runtime_error("Cannot write raw results: " + raw_path.string());
+
+    const std::uintmax_t model_bytes = std::filesystem::file_size(model_file);
+    raw << std::setprecision(9)
+        << "{\"record_type\":\"run\",\"model_path\":\""
+        << json_escape(std::filesystem::absolute(model_file).string())
+        << "\",\"model_bytes\":" << model_bytes
+        << ",\"onnx_runtime_version\":\"" << json_escape(Ort::GetVersionString())
+        << "\",\"opencv_version\":\"" << CV_VERSION
+        << "\",\"manifest_path\":\"" << json_escape(manifest_path.string())
+        << "\",\"person_detection_threshold\":" << options.person_threshold
+        << ",\"person_detection_threshold_definition\":\"minimum detector "
+           "person confidence; independent of keypoint confidence\","
+        << "\"keypoint_confidence_threshold\":" << options.keypoint_threshold
+        << ",\"keypoint_threshold_definition\":\"minimum per-keypoint score "
+           "for the keypoint valid flag; does not filter detections\","
+        << "\"timing_method\":\"steady_clock around PoseDetector::detect only; "
+           "image decoding and output writing excluded\","
+        << "\"latency_unit\":\"milliseconds\"}\n";
+
+    std::size_t valid_frames = 0;
+    std::size_t rejected_frames = 0;
+    std::size_t failed_frames = 0;
+    std::vector<double> latencies_ms;
+    PoseDetector detector(model_path);
+    for (const Fixture& fixture : fixtures) {
+        const std::filesystem::path image_path =
+            manifest_path.parent_path() / fixture.path;
+        cv::Mat image = cv::imread(image_path.string(), cv::IMREAD_COLOR);
+        if (image.empty()) {
+            ++failed_frames;
+            const std::string error = "image_read_failed";
+            write_error_record(raw, fixture, image_path.string(), error);
+            std::cerr << "Failed to read fixture image: " << image_path << '\n';
+            continue;
+        }
+
+        try {
+            const auto start = std::chrono::steady_clock::now();
+            const std::vector<Detection> detections =
+                detector.detect(image, options.person_threshold);
+            const double latency_ms =
+                std::chrono::duration<double, std::milli>(
+                    std::chrono::steady_clock::now() - start).count();
+            latencies_ms.push_back(latency_ms);
+            if (detections.empty()) {
+                ++rejected_frames;
+                write_offline_frame_json(
+                    raw, fixture.path, image_path.string(), fixture.phase,
+                    fixture.frame_id, fixture.source_run,
+                    options.person_threshold, options.keypoint_threshold,
+                    image.cols, image.rows, latency_ms, nullptr);
+            } else {
+                ++valid_frames;
+                write_offline_frame_json(
+                    raw, fixture.path, image_path.string(), fixture.phase,
+                    fixture.frame_id, fixture.source_run,
+                    options.person_threshold, options.keypoint_threshold,
+                    image.cols, image.rows, latency_ms, &detections.front());
+            }
+        } catch (const std::exception& error) {
+            ++failed_frames;
+            write_error_record(raw, fixture, image_path.string(),
+                               std::string("inference_failed: ") + error.what());
+            std::cerr << "Inference failed for " << image_path << ": "
+                      << error.what() << '\n';
+        }
+    }
+    raw.flush();
+    if (!raw) throw std::runtime_error("Failed writing raw results: " + raw_path.string());
+    raw.close();
+
+    const auto metrics = offline_validation::calculate_metrics(
+        fixtures.size(), valid_frames, rejected_frames, failed_frames,
+        std::move(latencies_ms));
+    std::ofstream summary(summary_path);
+    if (!summary) {
+        throw std::runtime_error("Cannot write summary: " + summary_path.string());
+    }
+    summary << std::setprecision(9)
+            << "{\n  \"model_path\": \""
+            << json_escape(std::filesystem::absolute(model_file).string())
+            << "\",\n  \"model_bytes\": " << model_bytes
+            << ",\n  \"onnx_runtime_version\": \""
+            << json_escape(Ort::GetVersionString())
+            << "\",\n  \"opencv_version\": \"" << CV_VERSION
+            << "\",\n  \"manifest_path\": \"" << json_escape(manifest_path.string())
+            << "\",\n  \"person_detection_threshold\": "
+            << options.person_threshold
+            << ",\n  \"person_detection_threshold_definition\": "
+               "\"minimum detector person confidence; independent of keypoint confidence\""
+            << ",\n  \"keypoint_confidence_threshold\": "
+            << options.keypoint_threshold
+            << ",\n  \"keypoint_threshold_definition\": "
+               "\"minimum per-keypoint score for the keypoint valid flag; does not filter detections\""
+            << ",\n  \"total_frames\": " << metrics.total_frames
+            << ",\n  \"valid_frames\": " << metrics.valid_frames
+            << ",\n  \"rejected_no_person_frames\": " << metrics.rejected_frames
+            << ",\n  \"failed_frames\": " << metrics.failed_frames
+            << ",\n  \"latency_sample_count\": " << metrics.latency_samples
+            << ",\n  \"mean_latency_ms\": " << metrics.mean_latency_ms
+            << ",\n  \"p95_latency_ms\": " << metrics.p95_latency_ms
+            << ",\n  \"p95_method\": \"nearest-rank percentile over successful "
+               "inference calls\"\n"
+            << ",\n  \"fps\": " << metrics.fps
+            << ",\n  \"fps_definition\": \"successful inference calls divided by "
+               "the sum of their inference latencies in seconds\"\n"
+            << ",\n  \"timing_method\": \"steady_clock around PoseDetector::detect "
+               "only; image decoding and output writing excluded\"\n"
+            << ",\n  \"latency_unit\": \"milliseconds\""
+            << ",\n  \"p95_caveat\": \"Only " << metrics.latency_samples
+            << " latency samples; p95 is statistically less reliable for a small "
+               "fixture set.\"\n}\n";
+    summary.flush();
+    if (!summary) throw std::runtime_error("Failed writing summary: " + summary_path.string());
+
+    std::cout << "Offline inference complete: " << fixtures.size()
+              << " total, " << valid_frames << " valid, " << rejected_frames
+              << " no-person, " << failed_frames << " failed\n"
+              << "Raw results: " << raw_path << "\n"
+              << "Summary: " << summary_path << "\n";
+    return failed_frames == 0 ? 0 : 2;
+}
+
+void print_usage(const char* program) {
+    std::cout << "Usage:\n  " << program
+              << " --offline [--manifest fixtures/manifest.csv]"
+                 " [--threshold 0.3] [--keypoint-threshold 0.5]"
+                 " [--output offline-inference]\n"
+              << "  " << program << " [camera-index]\n";
+}
+
+}  // namespace
+
 int main(int argc, char* argv[]) {
     std::signal(SIGINT,  signal_handler);
     std::signal(SIGTERM, signal_handler);
+
+    if (argc > 1 && std::string(argv[1]) == "--help") {
+        print_usage(argv[0]);
+        return 0;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--offline") {
+        try {
+            return run_offline(
+                parse_offline_options(argc, argv), "models/yolov8n-pose.onnx");
+        } catch (const std::exception& error) {
+            std::cerr << "Offline inference error: " << error.what() << '\n';
+            return 1;
+        }
+    }
 
     std::string model_path = "models/yolov8n-pose.onnx";
     int cam_index = (argc > 1) ? std::stoi(argv[1]) : 0;

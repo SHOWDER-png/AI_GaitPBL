@@ -11,6 +11,8 @@ cmd : wget -P models/ https://github.com/ultralytics/assets/releases/download/v8
 
 Place the downloaded `yolov8n-pose.onnx` file into the `models/` directory.
 
+Recorded fixture inference and confidence-threshold options are documented in
+[Camera/OFFLINE_INFERENCE.md](Camera/OFFLINE_INFERENCE.md).
 
 
 Performance Baseline — macOS M1
