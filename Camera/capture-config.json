@@ -1,5 +1,5 @@
 {
-  "status": "capture_complete_framing_and_fixture_review_incomplete",
+  "status": "capture_complete_metadata_and_fixture_review_incomplete",
   "camera": {
     "model": null,
     "connection": null,
@@ -20,8 +20,8 @@
     "mounting_height_cm": null,
     "camera_to_subject_distance_cm": null,
     "viewing_direction": "Front-facing (observed)",
-    "lower_body_and_feet_visible": false,
-    "visual_review": "Sampled walking frames show the subject near the left edge early and feet clipped at the bottom near the end; do not use this placement as validated framing. Move the camera farther back, center the walking path, and recapture.",
+    "lower_body_and_feet_visible": null,
+    "visual_review": "In the remaining walking images reviewed, the subject is centered and both feet are within frame at far, middle, and near distances. Full-phase framing cannot be confirmed because walking frames 166-250 were deleted after capture and are still listed in frames.csv.",
     "existing_application_guidance": {
       "mounting_height_cm": [90, 100],
       "distance_cm": [200, 300],
@@ -32,26 +32,46 @@
     "seconds_per_phase": 8,
     "phase_order": ["standing", "walking", "no_person"],
     "latest_run": {
-      "directory": "Camera/captures/SCRUM-370-20261005-185859",
-      "frame_counts": {
-        "standing": 218,
-        "walking": 196,
-        "no_person": 207
+      "directory": "Camera/captures/SCRUM-370-20261006-123844",
+      "metadata_rows_before_manual_deletion": {
+        "standing": 165,
+        "walking": 181,
+        "no_person": 185,
+        "total": 531
+      },
+      "remaining_png_files": {
+        "standing": 143,
+        "walking": 96,
+        "no_person": 185,
+        "total": 424
+      },
+      "deleted_images_still_referenced_in_frames_csv": {
+        "standing_count": 22,
+        "standing_frame_indices": "1-22",
+        "walking_count": 85,
+        "walking_frame_indices": "166-250",
+        "no_person_count": 0,
+        "total": 107
       },
       "resolution_px": [1280, 720],
       "phase_duration_seconds_approx": {
-        "standing": 7.99,
-        "walking": 7.99,
-        "no_person": 7.96
+        "standing": 7.952,
+        "walking": 7.961,
+        "no_person": 7.991
+      },
+      "metadata_observed_frame_rate_fps": {
+        "standing": 20.62,
+        "walking": 22.61,
+        "no_person": 23.03
       },
       "estimated_dropped_frames": {
-        "standing": 23,
-        "walking": 45,
-        "no_person": 33,
-        "total": 101
+        "standing": 75,
+        "walking": 59,
+        "no_person": 56,
+        "total": 190
       },
       "frame_indices_monotonic": true,
-      "notes": "All metadata rows report 1280x720. Effective saved-frame rate includes file-write time; estimated drops are inferred from inter-frame gaps, not a sensor counter."
+      "notes": "All metadata rows report 1280x720 and indices are strictly increasing. 107 image files were manually deleted but their rows remain in frames.csv; the CSV is the original capture log and is not consistent with the files currently present. Rates are computed from original metadata rows before considering deletions. Drop counts are gap-based estimates, not sensor counters."
     },
     "image_format": "PNG",
     "raw_capture_directory": "Camera/captures/ (ignored by Git)",
