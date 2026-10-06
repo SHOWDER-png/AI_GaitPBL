@@ -1,5 +1,5 @@
 {
-  "status": "existing_capture_and_fixture_set_ready_physical_measurements_pending",
+  "status": "capture_and_fixture_ready_jira_evidence_pending_known_22_missing_standing_frames",
   "camera": {
     "model": "FaceTime HD Camera (reported by macOS)",
     "connection": "Built-in integrated camera",
@@ -14,11 +14,11 @@
       "no_person": 23.03
     },
     "exposure_mode_and_value": "Unavailable from OpenCV backend (CAP_PROP_EXPOSURE=-1)",
-    "lighting_conditions": null
+    "lighting_conditions": "Two room lights on; daytime; curtains closed"
   },
   "placement": {
-    "mounting_height_cm": null,
-    "camera_to_subject_distance_cm": null,
+    "mounting_height_cm": 60,
+    "camera_to_subject_distance_cm": 150,
     "viewing_direction": "Front-facing (observed)",
     "lower_body_and_feet_visible": true,
     "visual_review": "Reviewed walking samples at far, middle, and near distances show the subject centered with both feet in frame; all 181 walking image files are currently present. The first 22 standing images are absent, but 143 standing images remain for pose-processing fixtures. No recapture is required to use the existing local input set.",
