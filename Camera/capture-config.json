@@ -77,5 +77,10 @@
     "raw_capture_directory": "Camera/captures/ (ignored by Git)",
     "metadata_file": "frames.csv",
     "drop_count_method": "Estimated from monotonic frame timestamp gaps versus requested frame period; not a sensor-level counter."
+  },
+  "program_verification": {
+    "camera_open_success": "Device 0 opened and delivered a 1280x720 frame.",
+    "failure_case": "Device 99 reports that the camera could not be opened and suggests checking connection, device index, and OS permission.",
+    "failure_exit_code": 1
   }
 }
