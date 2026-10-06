@@ -12,6 +12,9 @@ Download the pre-trained YOLOv8 pose model before running the application:
 cmd : wget -P models/ https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8n-pose.onnx
 
 Place the downloaded `yolov8n-pose.onnx` file into the `models/` directory.
+
+Recorded fixture inference and confidence-threshold options are documented in
+[Camera/OFFLINE_INFERENCE.md](Camera/OFFLINE_INFERENCE.md).
 ================================================================================================
 
 

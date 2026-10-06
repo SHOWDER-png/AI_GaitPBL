@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <numeric>
+#include "offline_validation.h"
 
 PoseDetector::PoseDetector(const std::string& model_path)
     : env_(ORT_LOGGING_LEVEL_WARNING, "PoseDetector")
@@ -46,7 +47,8 @@ std::vector<Detection> PoseDetector::postprocess(
 
     for (int i = 0; i < rows; ++i) {
         float conf = data[4 * 8400 + i];  // column-major layout
-        if (conf < conf_thresh) continue;
+        if (!offline_validation::confidence_meets_threshold(conf, conf_thresh))
+            continue;
 
         Detection det;
         det.conf = conf;
