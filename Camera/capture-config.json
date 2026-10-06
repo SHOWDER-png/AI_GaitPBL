@@ -1,5 +1,5 @@
 {
-  "status": "capture_complete_metadata_and_fixture_review_incomplete",
+  "status": "existing_capture_and_fixture_set_ready_physical_measurements_pending",
   "camera": {
     "model": "FaceTime HD Camera (reported by macOS)",
     "connection": "Built-in integrated camera",
@@ -20,8 +20,8 @@
     "mounting_height_cm": null,
     "camera_to_subject_distance_cm": null,
     "viewing_direction": "Front-facing (observed)",
-    "lower_body_and_feet_visible": null,
-    "visual_review": "Reviewed walking samples at far, middle, and near distances show the subject centered with both feet in frame. All walking image files are currently present. The first 22 standing images are still missing, so the original run is not fully intact.",
+    "lower_body_and_feet_visible": true,
+    "visual_review": "Reviewed walking samples at far, middle, and near distances show the subject centered with both feet in frame; all 181 walking image files are currently present. The first 22 standing images are absent, but 143 standing images remain for pose-processing fixtures. No recapture is required to use the existing local input set.",
     "existing_application_guidance": {
       "mounting_height_cm": [90, 100],
       "distance_cm": [200, 300],
@@ -55,6 +55,17 @@
       },
       "available_manifest": "Camera/captures/SCRUM-370-20261006-123844/frames_available.csv",
       "available_manifest_rows": 509,
+      "repository_fixtures": {
+        "manifest": "Camera/fixtures/manifest.csv",
+        "standing": ["Camera/fixtures/standing/standing_frame_94.png"],
+        "walking": [
+          "Camera/fixtures/walking/walking_far_frame_251.png",
+          "Camera/fixtures/walking/walking_mid_frame_298.png",
+          "Camera/fixtures/walking/walking_near_frame_346.png"
+        ],
+        "no_person": ["Camera/fixtures/no_person/no_person_frame_439.png"],
+        "source_images_unchanged": true
+      },
       "resolution_px": [1280, 720],
       "phase_duration_seconds_approx": {
         "standing": 7.952,
@@ -73,7 +84,7 @@
         "total": 190
       },
       "frame_indices_monotonic": true,
-      "notes": "All original metadata rows report 1280x720 and indices are strictly increasing. The original frames.csv retains all 531 capture records. The derived frames_available.csv contains the 509 rows whose PNG files currently exist; only standing indices 1-22 are absent. Rates are computed from original metadata rows before deletions. Drop counts are gap-based estimates, not sensor counters."
+      "notes": "All original metadata rows report 1280x720 and indices are strictly increasing. The original frames.csv retains all 531 capture records. The derived frames_available.csv contains the 509 rows whose PNG files currently exist; only standing indices 1-22 are absent. Use this available manifest as the existing pose-processing input set; no recapture is planned. Rates are computed from original metadata rows before deletions. Drop counts are gap-based estimates, not sensor counters."
     },
     "image_format": "PNG",
     "raw_capture_directory": "Camera/captures/ (ignored by Git)",
