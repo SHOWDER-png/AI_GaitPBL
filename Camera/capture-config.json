@@ -1,0 +1,99 @@
+{
+  "status": "capture_and_fixture_ready_jira_evidence_pending_known_22_missing_standing_frames",
+  "camera": {
+    "model": "FaceTime HD Camera (reported by macOS)",
+    "connection": "Built-in integrated camera",
+    "device_index": 0,
+    "requested_resolution_px": [1280, 720],
+    "requested_frame_rate_fps": 30,
+    "negotiated_resolution_px": [1280, 720],
+    "backend_reported_frame_rate_fps": 30,
+    "effective_saved_frame_rate_fps": {
+      "standing": 20.62,
+      "walking": 22.61,
+      "no_person": 23.03
+    },
+    "exposure_mode_and_value": "Unavailable from OpenCV backend (CAP_PROP_EXPOSURE=-1)",
+    "lighting_conditions": "Two room lights on; daytime; curtains closed"
+  },
+  "placement": {
+    "mounting_height_cm": 60,
+    "camera_to_subject_distance_cm": 150,
+    "viewing_direction": "Front-facing (observed)",
+    "lower_body_and_feet_visible": true,
+    "visual_review": "Reviewed walking samples at far, middle, and near distances show the subject centered with both feet in frame; all 181 walking image files are currently present. The first 22 standing images are absent, but 143 standing images remain for pose-processing fixtures. No recapture is required to use the existing local input set.",
+    "existing_application_guidance": {
+      "mounting_height_cm": [90, 100],
+      "distance_cm": [200, 300],
+      "view": "front"
+    }
+  },
+  "capture": {
+    "seconds_per_phase": 8,
+    "phase_order": ["standing", "walking", "no_person"],
+    "latest_run": {
+      "directory": "Camera/captures/SCRUM-370-20261006-123844",
+      "original_metadata_rows": {
+        "standing": 165,
+        "walking": 181,
+        "no_person": 185,
+        "total": 531
+      },
+      "currently_present_png_files": {
+        "standing": 143,
+        "walking": 181,
+        "no_person": 185,
+        "total": 509
+      },
+      "missing_images_still_referenced_in_frames_csv": {
+        "standing_count": 22,
+        "standing_frame_indices": "1-22",
+        "walking_count": 0,
+        "walking_frame_indices": null,
+        "no_person_count": 0,
+        "total": 22
+      },
+      "available_manifest": "Camera/captures/SCRUM-370-20261006-123844/frames_available.csv",
+      "available_manifest_rows": 509,
+      "repository_fixtures": {
+        "manifest": "Camera/fixtures/manifest.csv",
+        "standing": ["Camera/fixtures/standing/standing_frame_94.png"],
+        "walking": [
+          "Camera/fixtures/walking/walking_far_frame_251.png",
+          "Camera/fixtures/walking/walking_mid_frame_298.png",
+          "Camera/fixtures/walking/walking_near_frame_346.png"
+        ],
+        "no_person": ["Camera/fixtures/no_person/no_person_frame_439.png"],
+        "source_images_unchanged": true
+      },
+      "resolution_px": [1280, 720],
+      "phase_duration_seconds_approx": {
+        "standing": 7.952,
+        "walking": 7.961,
+        "no_person": 7.991
+      },
+      "metadata_observed_frame_rate_fps": {
+        "standing": 20.62,
+        "walking": 22.61,
+        "no_person": 23.03
+      },
+      "estimated_dropped_frames": {
+        "standing": 75,
+        "walking": 59,
+        "no_person": 56,
+        "total": 190
+      },
+      "frame_indices_monotonic": true,
+      "notes": "All original metadata rows report 1280x720 and indices are strictly increasing. The original frames.csv retains all 531 capture records. The derived frames_available.csv contains the 509 rows whose PNG files currently exist; only standing indices 1-22 are absent. Use this available manifest as the existing pose-processing input set; no recapture is planned. Rates are computed from original metadata rows before deletions. Drop counts are gap-based estimates, not sensor counters."
+    },
+    "image_format": "PNG",
+    "raw_capture_directory": "Camera/captures/ (ignored by Git)",
+    "metadata_file": "frames.csv",
+    "drop_count_method": "Estimated from monotonic frame timestamp gaps versus requested frame period; not a sensor-level counter."
+  },
+  "program_verification": {
+    "camera_open_success": "Device 0 opened and delivered a 1280x720 frame.",
+    "failure_case": "Device 99 reports that the camera could not be opened and suggests checking connection, device index, and OS permission.",
+    "failure_exit_code": 1
+  }
+}
