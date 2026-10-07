@@ -6,7 +6,7 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/Users/nxnecrx/Desktop/PBL3/Project_Git/AI_GaitPBL/Camera/include -I/opt/homebrew/include/onnxruntime -I/opt/homebrew/include -isystem /opt/homebrew/Cellar/opencv/5.0.0/include/opencv5
 
-CXX_FLAGSarm64 = -O3 -DNDEBUG -std=gnu++17 -arch arm64 -O2
+CXX_FLAGSarm64 = -std=gnu++17 -arch arm64 -O2
 
-CXX_FLAGS = -O3 -DNDEBUG -std=gnu++17 -arch arm64 -O2
+CXX_FLAGS = -std=gnu++17 -arch arm64 -O2
 

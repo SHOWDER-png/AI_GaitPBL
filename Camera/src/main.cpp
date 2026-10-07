@@ -397,18 +397,30 @@ int main(int argc, char* argv[]) {
     }
 
     std::string model_path = "models/yolov8n-pose.onnx";
-    int cam_index = (argc > 1) ? std::stoi(argv[1]) : 0;
 
     PoseDetector detector(model_path);
 
+#if defined(__linux__)
+    // FRDM-IMX95: capture through libcamera/NeoISP via GStreamer.
+    // Requires LIBCAMERA_PIPELINES_MATCH_LIST=nxp/neo to be set in the
+    // environment (see deployment guide) so libcamera selects the
+    // ISP-capable pipeline handler instead of the raw imx8-isi handler.
+    std::string pipeline =
+        "libcamerasrc ! video/x-raw,format=NV12,width=1280,height=720,"
+        "framerate=30/1 ! videoconvert ! video/x-raw,format=BGR ! "
+        "appsink drop=true max-buffers=1 sync=false";
+    cv::VideoCapture cap(pipeline, cv::CAP_GSTREAMER);
+#else
+    int cam_index = (argc > 1) ? std::stoi(argv[1]) : 0;
     cv::VideoCapture cap(cam_index);
-    if (!cap.isOpened()) {
-        std::cerr << "Cannot open camera index " << cam_index << "\n";
-        return 1;
-    }
     cap.set(cv::CAP_PROP_FRAME_WIDTH,  1280);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
     cap.set(cv::CAP_PROP_FPS, 30);
+#endif
+    if (!cap.isOpened()) {
+        std::cerr << "Cannot open camera\n";
+        return 1;
+    }
 
     std::cout << "Camera opened\n";
     std::cout << "Controls:\n";
@@ -534,6 +546,13 @@ int main(int argc, char* argv[]) {
                     cv::circle(frame,
                         {(int)lm[id].x, (int)lm[id].y},
                         7, {0,255,0}, -1);
+
+            // Virtual hip indicator
+            if (current_g.l_hip_virtual || current_g.r_hip_virtual) {
+                cv::putText(frame, "HIP: virtual fallback active",
+                    {20, frame.rows-70},
+                    cv::FONT_HERSHEY_SIMPLEX, 0.55, {255,165,0}, 1);
+            }
 
             // Draw skeleton
             auto line = [&](int a, int b) {

@@ -770,6 +770,7 @@ CMakeFiles/posture_detection.dir/src/angle_calc.cpp.o: \
   /opt/homebrew/Cellar/opencv/5.0.0/include/opencv5/opencv2/core/neon_utils.hpp \
   /opt/homebrew/Cellar/opencv/5.0.0/include/opencv5/opencv2/core/vsx_utils.hpp \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/assert.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_assert.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_static_assert.h \
   /opt/homebrew/Cellar/opencv/5.0.0/include/opencv5/opencv2/core/exception.hpp \
   /opt/homebrew/Cellar/opencv/5.0.0/include/opencv5/opencv2/core/check.hpp \

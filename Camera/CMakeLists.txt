@@ -11,7 +11,10 @@ if(APPLE)
     find_package(OpenCV REQUIRED HINTS "${HOMEBREW_PREFIX}/lib/cmake")
 else()
     message(STATUS "Platform: Linux aarch64 (FRDM-IMX95)")
-    # Set via cmake args when cross-compiling
+    find_package(OpenCV REQUIRED)
+    if(NOT DEFINED ONNXRUNTIME_ROOT)
+        set(ONNXRUNTIME_ROOT "/root/onnxruntime-linux-aarch64-1.19.0")
+    endif()
 endif()
 
 # ── Sources ───────────────────────────────────────────────────
@@ -37,8 +40,17 @@ target_include_directories(posture_detection PRIVATE
 # ── Link ──────────────────────────────────────────────────────
 target_link_libraries(posture_detection PRIVATE
     ${OpenCV_LIBS}
-    ${ONNXRUNTIME_ROOT}/lib/libonnxruntime.dylib
 )
+
+if(APPLE)
+    target_link_libraries(posture_detection PRIVATE
+        ${ONNXRUNTIME_ROOT}/lib/libonnxruntime.dylib
+    )
+else()
+    target_link_libraries(posture_detection PRIVATE
+        ${ONNXRUNTIME_ROOT}/lib/libonnxruntime.so
+    )
+endif()
 
 # ── macOS frameworks ──────────────────────────────────────────
 if(APPLE)
