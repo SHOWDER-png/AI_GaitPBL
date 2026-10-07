@@ -101,3 +101,51 @@ saved SCRUM-371 output without changing it. The model-index mapping, output
 schema, point-validation reasons, duplicate-coordinate rule, example, and
 focused test command are documented in
 [LOWER_BODY_KEYPOINTS.md](LOWER_BODY_KEYPOINTS.md).
+
+## SCRUM-373 annotated report
+
+The checked-in report output is
+`Camera/results/scrum373-annotated-performance-report/`:
+
+- `report.md` contains measured fixture performance, explicit comparisons
+  against the existing README latency/FPS targets, camera setup, evidence
+  limitations, selected examples, and reproduction commands.
+- `annotations/*.svg` are reviewable overlays on the unchanged PNG fixtures.
+  The six lower-body model points are identified by index; the legend shows
+  confidence and `valid`, `invalid`, or `missing` status. SVGs reference their
+  source PNGs under `Camera/fixtures/` by relative path.
+- `outputs.json` uses schema `scrum373-results.v1` and records source evidence,
+  reconciled metrics, model/runtime identity, capture details, selected roles,
+  and per-point state.
+
+Regenerate the SCRUM-373 outputs from the checked-in SCRUM-371 inference and
+SCRUM-372 lower-body records, from the repository root:
+
+```sh
+python3 Camera/tools/generate_scrum373_report.py \
+  --output-dir Camera/results/scrum373-annotated-performance-report
+```
+
+The generator validates every fixture against its manifest SHA-256 and image
+dimensions, pairs all SCRUM-371 frames with their SCRUM-372 records, recomputes
+the timing/count metrics from per-frame results, and fails if they differ from
+the saved SCRUM-371 summary. It also confirms the local model matches the
+recorded hash. It does not run inference or modify fixture/input files.
+
+The exact saved capture configuration, model/runtime versions, and SCRUM-371
+command are in the preceding sections and
+`Camera/results/scrum371-run-20261006/run-config.json`. Recapture guidance and
+the SCRUM-370 capture command are in [CAMERA_CAPTURE.md](CAMERA_CAPTURE.md).
+The full ignored SCRUM-370 capture directory is not included in this worktree;
+only the curated fixture images and metadata are available. These measured
+macOS fixture timings are not i.MX95 measurements. The platform-specific
+build configuration is in [CMakeLists.txt](CMakeLists.txt); repeat inference
+and record native runtime/board details on FRDM-i.MX95 before making target
+performance claims.
+
+Focused Python checks:
+
+```sh
+python3 -m unittest discover -s Camera/tests -p 'test_scrum373_report.py' -v
+python3 -m unittest discover -s Camera/tests -p 'test_lower_body_records.py' -v
+```
