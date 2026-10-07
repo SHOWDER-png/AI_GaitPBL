@@ -95,3 +95,9 @@ From the repository root, run:
 ```sh
 ctest --test-dir build --output-on-failure -R offline_validation_tests
 ```
+
+SCRUM-372 derives timestamped left/right hip, knee, and ankle records from the
+saved SCRUM-371 output without changing it. The model-index mapping, output
+schema, point-validation reasons, duplicate-coordinate rule, example, and
+focused test command are documented in
+[LOWER_BODY_KEYPOINTS.md](LOWER_BODY_KEYPOINTS.md).
