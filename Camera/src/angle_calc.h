@@ -23,6 +23,10 @@ struct GaitResult {
     float l_leg_compression = 0.f;  // 0 = standing, 1 = fully squatted
     float r_leg_compression = 0.f;
     std::string squat_phase;        // STANDING / SEMI_SQUAT / DEEP_SQUAT
+
+    // Virtual hip fallback flags
+    bool l_hip_virtual = false;
+    bool r_hip_virtual = false;
 };
 
 // Calibration reference (set during standing calibration)

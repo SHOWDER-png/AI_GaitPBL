@@ -1,0 +1,27 @@
+{
+  "model_path": "/Users/nxnecrx/Desktop/PBL3/Project_Git/AI_GaitPBL/Camera/models/yolov8n-pose.onnx",
+  "model_bytes": 13447319,
+  "onnx_runtime_version": "1.28.0",
+  "opencv_version": "5.0.0",
+  "manifest_path": "/Users/nxnecrx/Desktop/PBL3/Project_Git/AI_GaitPBL/Camera/fixtures/manifest.csv",
+  "person_detection_threshold": 0.300000012,
+  "person_detection_threshold_definition": "minimum detector person confidence; independent of keypoint confidence",
+  "keypoint_confidence_threshold": 0.5,
+  "keypoint_threshold_definition": "minimum per-keypoint score for the keypoint valid flag; does not filter detections",
+  "total_frames": 5,
+  "valid_frames": 4,
+  "rejected_no_person_frames": 1,
+  "failed_frames": 0,
+  "latency_sample_count": 5,
+  "mean_latency_ms": 78.7820748,
+  "p95_latency_ms": 88.507875,
+  "p95_method": "nearest-rank percentile over successful inference calls"
+,
+  "fps": 12.6932428,
+  "fps_definition": "successful inference calls divided by the sum of their inference latencies in seconds"
+,
+  "timing_method": "steady_clock around PoseDetector::detect only; image decoding and output writing excluded"
+,
+  "latency_unit": "milliseconds",
+  "p95_caveat": "Only 5 latency samples; p95 is statistically less reliable for a small fixture set."
+}
