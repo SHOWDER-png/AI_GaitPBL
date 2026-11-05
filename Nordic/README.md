@@ -32,6 +32,7 @@ Nordic/
 │       ├── imu_bmi270_c29/   Kaan's C29 BMI270 characterisation (was /Thingy53_IMU_C29)
 │       ├── plantar_ads1115/  Plantar owner: first FSR → ADS1115 → Thingy:53 read
 │       └── ble_hello/        Nordic owner: first BLE link Thingy:53 → i.MX95
+├── FLASHING.md               How to build and put the firmware on a real Thingy:53
 ├── protocol/
 │   └── BLE_GAIT_PROTOCOL.md  The contract between the Thingy:53 and the i.MX95 (UUIDs, packet layout)
 ├── hardware/
@@ -67,7 +68,9 @@ Nordic/
 4. Commit recorded data you want to keep under `data/` in the relevant folder.
    (`*.csv` is ignored repo-wide; `Nordic/**/data/*.csv` is excepted in `.gitignore`.)
 
-## Build (nRF Connect SDK)
+## Build and flash (nRF Connect SDK)
+
+Full step-by-step guide, including putting it on a real Thingy:53: **[FLASHING.md](FLASHING.md)**.
 
 Team baseline (from C29): **nRF Connect SDK v3.3.4**, board target `thingy53/nrf5340/cpuapp`,
 sysbuild with MCUboot. v3.4.0 failed to build in C29 (devicetree error), so stay on v3.3.4
@@ -76,7 +79,7 @@ until someone fixes that.
 ```
 cd Nordic/firmware/gait_node
 west build -b thingy53/nrf5340/cpuapp --sysbuild -p
-west flash        # or drag build/dfu_application.zip into nRF Connect Programmer (USB DFU)
+# then flash build/dfu_application.zip over USB — see FLASHING.md
 ```
 
 Serial console: USB CDC ACM, 115200 baud.
