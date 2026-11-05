@@ -1,0 +1,37 @@
+# Module switches for the gait node. Turn a module off in prj.conf if it is not ready;
+# the rest of the firmware still builds and runs.
+
+menu "Gait node modules"
+
+config GAIT_IMU
+	bool "BMI270 IMU module (src/imu)"
+	default y
+	select SENSOR
+
+config GAIT_IMU_RATE_HZ
+	int "IMU sample rate (Hz)"
+	default 100
+	depends on GAIT_IMU
+
+config GAIT_PLANTAR
+	bool "FSR 402 plantar pressure module via ADS1115 (src/plantar)"
+	default n
+	help
+	  Off until the plantar hardware is wired and the experiment in
+	  firmware/experiments/plantar_ads1115 works.
+
+config GAIT_PLANTAR_RATE_HZ
+	int "Plantar sample rate (Hz)"
+	default 50
+	depends on GAIT_PLANTAR
+
+config GAIT_BLE
+	bool "BLE streaming to the i.MX95 (src/ble)"
+	default n
+	help
+	  Off until protocol/BLE_GAIT_PROTOCOL.md is agreed. When off, samples
+	  are printed to the USB serial console instead.
+
+endmenu
+
+source "Kconfig.zephyr"
