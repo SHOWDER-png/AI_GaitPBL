@@ -1,0 +1,26 @@
+/* Devicetree overlay for thingy53/nrf5340/cpuapp */
+
+/* IMU owner: BMI270 on SPI, as in experiments/imu_bmi270_c29 */
+&bmi270 {
+	status = "okay";
+};
+
+/*
+ * Plantar owner: ADS1115 ADC(s) for the six FSR 402 sensors.
+ * One ADS1115 has 4 inputs, so six FSRs need TWO chips (ADDR pin → 0x48 and 0x49).
+ * TODO: pick the I2C bus and pins that are reachable on the Thingy:53, then
+ *       uncomment and fill in. Record the choice in hardware/PLANTAR_WIRING.md.
+ *
+ * &i2cX {
+ *	ads1115_a: ads1115@48 {
+ *		compatible = "ti,ads1115";
+ *		reg = <0x48>;
+ *		#io-channel-cells = <1>;
+ *	};
+ *	ads1115_b: ads1115@49 {
+ *		compatible = "ti,ads1115";
+ *		reg = <0x49>;
+ *		#io-channel-cells = <1>;
+ *	};
+ * };
+ */

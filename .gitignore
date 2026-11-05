@@ -19,3 +19,6 @@ Camera/captures/
 *.o
 *.obj
 *.exe
+
+# Recorded Nordic sensor data is kept on purpose
+!Nordic/**/data/*.csv
