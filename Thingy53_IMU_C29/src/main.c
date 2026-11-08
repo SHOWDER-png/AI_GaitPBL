@@ -6,6 +6,7 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
+#include "fsr402.h"
 #include <zephyr/drivers/sensor.h>
 #include <stdio.h>
 
@@ -21,6 +22,14 @@ int main(void)
 	}
 
 	printf("Device %p name is %s\n", dev, dev->name);
+	
+	/* Initialize FSR402 */
+	if (fsr402_init() < 0) {
+		printf("Failed to initialize FSR402\n");
+		return 0;
+	}
+	printf("FSR402 initialized successfully\n");
+
 
 	/* Setting scale in G, due to loss of precision if the SI unit m/s^2
 	 * is used
@@ -65,6 +74,9 @@ int main(void)
 			SENSOR_ATTR_SAMPLING_FREQUENCY,
 			&sampling_freq);
 
+
+	int16_t fsr_raw;
+
 	while (1) {
 		/* 10ms period, 100Hz Sampling frequency */
 		k_sleep(K_MSEC(10));
@@ -73,6 +85,11 @@ int main(void)
 
 		sensor_channel_get(dev, SENSOR_CHAN_ACCEL_XYZ, acc);
 		sensor_channel_get(dev, SENSOR_CHAN_GYRO_XYZ, gyr);
+
+		/* Read FSR402 */
+		if (fsr402_read(&fsr_raw) == 0) {
+			printf("FSR402 Raw ADC: %d\n", fsr_raw);
+		}
 
 		printf("AX: %d.%06d; AY: %d.%06d; AZ: %d.%06d; "
 		       "GX: %d.%06d; GY: %d.%06d; GZ: %d.%06d;\n",
