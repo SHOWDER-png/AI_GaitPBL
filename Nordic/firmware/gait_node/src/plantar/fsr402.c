@@ -6,7 +6,7 @@
 #include <zephyr/drivers/adc.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/sys/printk.h>
-
+#include <errno.h>
 #include "fsr402.h"
 
 /* Get ADC configuration from app.overlay */

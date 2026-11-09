@@ -1,100 +1,104 @@
 /*
- * Thingy:53 gait node — main loop. Owner: Nordic.
+ * Copyright (c) 2021 Bosch Sensortec GmbH
  *
- * Reads the enabled sensor modules on one shared clock and either sends the
- * samples over BLE (CONFIG_GAIT_BLE=y) or prints them to the USB console.
+ * SPDX-License-Identifier: Apache-2.0
  */
+
 #include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include "fsr402.h"
+#include <zephyr/drivers/sensor.h>
 #include <stdio.h>
-
-#include "common/gait_types.h"
-#ifdef CONFIG_GAIT_IMU
-#include "imu/imu.h"
-#endif
-#ifdef CONFIG_GAIT_PLANTAR
-#include "plantar/plantar.h"
-#endif
-#ifdef CONFIG_GAIT_BLE
-#include "ble/gait_ble.h"
-#endif
-
-#ifdef CONFIG_GAIT_IMU
-#define TICK_HZ CONFIG_GAIT_IMU_RATE_HZ
-#else
-#define TICK_HZ 100
-#endif
-
-static void report_init(const char *name, int err)
-{
-	printf("%s init: %s (%d)\n", name, err ? "FAILED" : "ok", err);
-}
 
 int main(void)
 {
-	bool imu_ok = false, plantar_ok = false, ble_ok = false;
+	const struct device *const dev = DEVICE_DT_GET_ONE(bosch_bmi270);
+	struct sensor_value acc[3], gyr[3];
+	struct sensor_value full_scale, sampling_freq, oversampling;
 
-#ifdef CONFIG_GAIT_IMU
-	imu_ok = (imu_init() == 0);
-	report_init("imu", imu_ok ? 0 : -1);
-#endif
-#ifdef CONFIG_GAIT_PLANTAR
-	plantar_ok = (plantar_init() == 0);
-	report_init("plantar", plantar_ok ? 0 : -1);
-#endif
-#ifdef CONFIG_GAIT_BLE
-	ble_ok = (gait_ble_init() == 0);
-	report_init("ble", ble_ok ? 0 : -1);
-#endif
-	ARG_UNUSED(imu_ok);
-	ARG_UNUSED(plantar_ok);
-	ARG_UNUSED(ble_ok);
-	ARG_UNUSED(report_init);
+	if (!device_is_ready(dev)) {
+		printf("Device %s is not ready\n", dev->name);
+		return 0;
+	}
 
-	/* Fixed-rate loop: k_sleep(10 ms) in C29 drifted to ~94 Hz, so wait on an absolute deadline. */
-	int64_t next = k_uptime_get();
-	uint32_t tick = 0;
+	printf("Device %p name is %s\n", dev, dev->name);
+	
+	/* Initialize FSR402 */
+	if (fsr402_init() < 0) {
+		printf("Failed to initialize FSR402\n");
+		return 0;
+	}
+	printf("FSR402 initialized successfully\n");
+
+
+	/* Setting scale in G, due to loss of precision if the SI unit m/s^2
+	 * is used
+	 */
+	full_scale.val1 = 2;            /* G */
+	full_scale.val2 = 0;
+	sampling_freq.val1 = 100;       /* Hz. Performance mode */
+	sampling_freq.val2 = 0;
+	oversampling.val1 = 1;          /* Normal mode */
+	oversampling.val2 = 0;
+
+	sensor_attr_set(dev, SENSOR_CHAN_ACCEL_XYZ, SENSOR_ATTR_FULL_SCALE,
+			&full_scale);
+	sensor_attr_set(dev, SENSOR_CHAN_ACCEL_XYZ, SENSOR_ATTR_OVERSAMPLING,
+			&oversampling);
+	/* Set sampling frequency last as this also sets the appropriate
+	 * power mode. If already sampling, change to 0.0Hz before changing
+	 * other attributes
+	 */
+	sensor_attr_set(dev, SENSOR_CHAN_ACCEL_XYZ,
+			SENSOR_ATTR_SAMPLING_FREQUENCY,
+			&sampling_freq);
+
+
+	/* Setting scale in degrees/s to match the sensor scale */
+	full_scale.val1 = 500;          /* dps */
+	full_scale.val2 = 0;
+	sampling_freq.val1 = 100;       /* Hz. Performance mode */
+	sampling_freq.val2 = 0;
+	oversampling.val1 = 1;          /* Normal mode */
+	oversampling.val2 = 0;
+
+	sensor_attr_set(dev, SENSOR_CHAN_GYRO_XYZ, SENSOR_ATTR_FULL_SCALE,
+			&full_scale);
+	sensor_attr_set(dev, SENSOR_CHAN_GYRO_XYZ, SENSOR_ATTR_OVERSAMPLING,
+			&oversampling);
+	/* Set sampling frequency last as this also sets the appropriate
+	 * power mode. If already sampling, change sampling frequency to
+	 * 0.0Hz before changing other attributes
+	 */
+	sensor_attr_set(dev, SENSOR_CHAN_GYRO_XYZ,
+			SENSOR_ATTR_SAMPLING_FREQUENCY,
+			&sampling_freq);
+
+
+	int16_t fsr_raw;
 
 	while (1) {
-#ifdef CONFIG_GAIT_IMU
-		if (imu_ok) {
-			struct gait_imu_sample imu;
+		/* 10ms period, 100Hz Sampling frequency */
+		k_sleep(K_MSEC(10));
 
-			if (imu_read(&imu) == 0) {
-#ifdef CONFIG_GAIT_BLE
-				if (ble_ok) {
-					gait_ble_send_imu(&imu);
-				} else
-#endif
-				{
-					printf("IMU,%u,%.4f,%.4f,%.4f,%.5f,%.5f,%.5f\n", imu.t_ms,
-					       (double)imu.acc[0], (double)imu.acc[1], (double)imu.acc[2],
-					       (double)imu.gyr[0], (double)imu.gyr[1], (double)imu.gyr[2]);
-				}
-			}
+		sensor_sample_fetch(dev);
+
+		sensor_channel_get(dev, SENSOR_CHAN_ACCEL_XYZ, acc);
+		sensor_channel_get(dev, SENSOR_CHAN_GYRO_XYZ, gyr);
+
+		/* Read FSR402 */
+		if (fsr402_read(&fsr_raw) == 0) {
+			printf("FSR402 Raw ADC: %d\n", fsr_raw);
 		}
-#endif
 
-#ifdef CONFIG_GAIT_PLANTAR
-		if (plantar_ok && (tick % (TICK_HZ / CONFIG_GAIT_PLANTAR_RATE_HZ)) == 0) {
-			struct gait_plantar_sample p;
-
-			if (plantar_read(&p) == 0) {
-#ifdef CONFIG_GAIT_BLE
-				if (ble_ok) {
-					gait_ble_send_plantar(&p);
-				} else
-#endif
-				{
-					printf("FSR,%u,%d,%d,%d,%d,%d,%d\n", p.t_ms,
-					       p.raw[0], p.raw[1], p.raw[2], p.raw[3], p.raw[4], p.raw[5]);
-				}
-			}
-		}
-#endif
-
-		tick++;
-		next += 1000 / TICK_HZ;
-		k_sleep(K_TIMEOUT_ABS_MS(next));
+		printf("AX: %d.%06d; AY: %d.%06d; AZ: %d.%06d; "
+		       "GX: %d.%06d; GY: %d.%06d; GZ: %d.%06d;\n",
+		       acc[0].val1, acc[0].val2,
+		       acc[1].val1, acc[1].val2,
+		       acc[2].val1, acc[2].val2,
+		       gyr[0].val1, gyr[0].val2,
+		       gyr[1].val1, gyr[1].val2,
+		       gyr[2].val1, gyr[2].val2);
 	}
 	return 0;
 }
