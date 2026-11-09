@@ -1,0 +1,3 @@
+/Users/nxnecrx/Desktop/PBL3/Project_Git/AI_GaitPBL/Camera/build/CMakeFiles/posture_detection.dir
+/Users/nxnecrx/Desktop/PBL3/Project_Git/AI_GaitPBL/Camera/build/CMakeFiles/edit_cache.dir
+/Users/nxnecrx/Desktop/PBL3/Project_Git/AI_GaitPBL/Camera/build/CMakeFiles/rebuild_cache.dir

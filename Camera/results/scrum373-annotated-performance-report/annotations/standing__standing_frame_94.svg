@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1670" height="720" viewBox="0 0 1670 720" style="width:100%;height:auto;max-width:1670px" role="img">
+<title>representative standing: standing/standing_frame_94.png</title>
+<defs><style>text{font-family:Arial,sans-serif}.heading{fill:#fff;font-size:22px;font-weight:700}.sub{fill:#d1d7df;font-size:14px}.point-label{fill:#fff;font-size:16px}.point-meta{fill:#c3ccd7;font-size:13px}.marker{font-size:11px;font-weight:bold;text-anchor:middle}</style></defs>
+<image x="0" y="0" width="1280" height="720" href="../../../fixtures/standing/standing_frame_94.png" xlink:href="../../../fixtures/standing/standing_frame_94.png" preserveAspectRatio="none"/>
+<rect x="1280" y="0" width="390" height="720" fill="#111827"/>
+<text x="1304" y="38" class="heading">Standing example</text>
+<text x="1304" y="67" class="sub">standing · standing/standing_frame_94.png</text>
+<line x1="673.714" y1="33.870" x2="672.133" y2="263.706" stroke="#63e6be" stroke-width="4" opacity="0.85"/>
+<line x1="672.133" y1="263.706" x2="675.594" y2="425.910" stroke="#63e6be" stroke-width="4" opacity="0.85"/>
+<line x1="561.080" y1="31.783" x2="560.512" y2="257.013" stroke="#63e6be" stroke-width="4" opacity="0.85"/>
+<line x1="560.512" y1="257.013" x2="577.743" y2="417.015" stroke="#63e6be" stroke-width="4" opacity="0.85"/>
+<circle cx="673.714" cy="33.870" r="13" fill="#35d07f" fill-opacity="0.30" stroke="#35d07f" stroke-width="4"/>
+<text x="673.714" y="37.870" class="marker" fill="#07110c">11</text>
+<circle cx="561.080" cy="31.783" r="13" fill="#35d07f" fill-opacity="0.30" stroke="#35d07f" stroke-width="4"/>
+<text x="561.080" y="35.783" class="marker" fill="#07110c">12</text>
+<circle cx="672.133" cy="263.706" r="13" fill="#35d07f" fill-opacity="0.30" stroke="#35d07f" stroke-width="4"/>
+<text x="672.133" y="267.706" class="marker" fill="#07110c">13</text>
+<circle cx="560.512" cy="257.013" r="13" fill="#35d07f" fill-opacity="0.30" stroke="#35d07f" stroke-width="4"/>
+<text x="560.512" y="261.013" class="marker" fill="#07110c">14</text>
+<circle cx="675.594" cy="425.910" r="13" fill="#35d07f" fill-opacity="0.30" stroke="#35d07f" stroke-width="4"/>
+<text x="675.594" y="429.910" class="marker" fill="#07110c">15</text>
+<circle cx="577.743" cy="417.015" r="13" fill="#35d07f" fill-opacity="0.30" stroke="#35d07f" stroke-width="4"/>
+<text x="577.743" y="421.015" class="marker" fill="#07110c">16</text>
+<circle cx="1314" cy="120" r="8" fill="#35d07f"/>
+<text x="1333" y="125" class="point-label">left_hip</text>
+<text x="1333" y="148" class="point-meta">index 11 · confidence 0.979 · VALID</text>
+<circle cx="1314" cy="192" r="8" fill="#35d07f"/>
+<text x="1333" y="197" class="point-label">right_hip</text>
+<text x="1333" y="220" class="point-meta">index 12 · confidence 0.977 · VALID</text>
+<circle cx="1314" cy="264" r="8" fill="#35d07f"/>
+<text x="1333" y="269" class="point-label">left_knee</text>
+<text x="1333" y="292" class="point-meta">index 13 · confidence 0.995 · VALID</text>
+<circle cx="1314" cy="336" r="8" fill="#35d07f"/>
+<text x="1333" y="341" class="point-label">right_knee</text>
+<text x="1333" y="364" class="point-meta">index 14 · confidence 0.995 · VALID</text>
+<circle cx="1314" cy="408" r="8" fill="#35d07f"/>
+<text x="1333" y="413" class="point-label">left_ankle</text>
+<text x="1333" y="436" class="point-meta">index 15 · confidence 0.989 · VALID</text>
+<circle cx="1314" cy="480" r="8" fill="#35d07f"/>
+<text x="1333" y="485" class="point-label">right_ankle</text>
+<text x="1333" y="508" class="point-meta">index 16 · confidence 0.989 · VALID</text>
+<text x="1304" y="670" class="sub">detection: accepted</text>
+<text x="1304" y="694" class="sub">Only SCRUM-372 lower-body coordinates are drawn.</text>
+</svg>

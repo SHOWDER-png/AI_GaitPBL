@@ -1,0 +1,6 @@
+fixture_path,phase,source_run,source_frame_index,utc_timestamp,elapsed_monotonic_ms,width,height,source_image_path,sha256
+standing/standing_frame_94.png,standing,SCRUM-370-20261006-123844,94,2026-10-06T05:39:33.435Z,46081.810,1280,720,Camera/captures/SCRUM-370-20261006-123844/standing/frame_94.png,1a65535bb17dd99e2e763933292070d62c094916f296126288edefa219623c1f
+walking/walking_far_frame_251.png,walking,SCRUM-370-20261006-123844,251,2026-10-06T05:39:53.162Z,65807.950,1280,720,Camera/captures/SCRUM-370-20261006-123844/walking/frame_251.png,538ea8798b67f2bb6a57aedffd92b5f6f5a0f881570ad8d4e3db49b3137996a8
+walking/walking_mid_frame_298.png,walking,SCRUM-370-20261006-123844,298,2026-10-06T05:39:54.864Z,67509.072,1280,720,Camera/captures/SCRUM-370-20261006-123844/walking/frame_298.png,a872649a073ff38e550391f15d4ae10a2bab614c5d45ace2e4e1aa5e639428b4
+walking/walking_near_frame_346.png,walking,SCRUM-370-20261006-123844,346,2026-10-06T05:39:57.597Z,70239.606,1280,720,Camera/captures/SCRUM-370-20261006-123844/walking/frame_346.png,d8e3a9788eba30beccd41f681a7fe911c29ea25535f44444f5b7282ac7bcd287
+no_person/no_person_frame_439.png,no_person,SCRUM-370-20261006-123844,439,2026-10-06T05:40:08.555Z,81201.990,1280,720,Camera/captures/SCRUM-370-20261006-123844/no_person/frame_439.png,304ac20f66ff7d6f71b36561f30694ae0168bd20101a6fb6a60dbaad332b554e

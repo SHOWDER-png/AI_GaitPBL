@@ -1,0 +1,339 @@
+{
+  "schema_version": "scrum373-results.v1",
+  "generated_at_utc": "2026-10-07T13:13:40Z",
+  "source_run": {
+    "record_type": "run",
+    "model_bytes": 13447319,
+    "onnx_runtime_version": "1.28.0",
+    "opencv_version": "5.0.0",
+    "person_detection_threshold": 0.300000012,
+    "person_detection_threshold_definition": "minimum detector person confidence; independent of keypoint confidence",
+    "keypoint_confidence_threshold": 0.5,
+    "keypoint_threshold_definition": "minimum per-keypoint score for the keypoint valid flag; does not filter detections",
+    "timing_method": "steady_clock around PoseDetector::detect only; image decoding and output writing excluded",
+    "latency_unit": "milliseconds"
+  },
+  "source_files": {
+    "inference_jsonl": "Camera/results/scrum371-run-20261006/offline-inference.jsonl",
+    "summary_json": "Camera/results/scrum371-run-20261006/offline-inference-summary.json",
+    "run_config_json": "Camera/results/scrum371-run-20261006/run-config.json",
+    "lower_body_jsonl": "Camera/results/scrum372-run-20261007/lower-body-records-20261007T122019.763970Z.jsonl",
+    "capture_config_json": "Camera/capture-config.json",
+    "fixture_manifest_csv": "Camera/fixtures/manifest.csv"
+  },
+  "metrics": {
+    "total_frames": 5,
+    "valid_frames": 4,
+    "rejected_no_person_frames": 1,
+    "failed_frames": 0,
+    "latency_sample_count": 5,
+    "mean_latency_ms": 78.7820748,
+    "p95_latency_ms": 88.507875,
+    "fps": 12.693242752728315,
+    "valid_frame_rate_percent": 80.0,
+    "mean_latency_target_ms": 100.0,
+    "mean_latency_target_result": "PASS",
+    "fps_target": 15.0,
+    "fps_target_result": "FAIL",
+    "p95_target_result": "NOT_SPECIFIED"
+  },
+  "model": {
+    "identity": "YOLOv8n-pose ONNX; repository README download URL names Ultralytics assets release v8.2.0",
+    "sha256": "a84b96c1bdaff04cb4cc77b052f337989c605836ff59388c22faabc21b96ce52",
+    "local_model_matches_recorded_hash": true,
+    "onnx_runtime_version": "1.28.0",
+    "opencv_version": "5.0.0",
+    "execution_platform": "macOS development host; CPU and OS build unrecorded"
+  },
+  "capture": {
+    "source_run_directory_present": false,
+    "inference_executable_present": false,
+    "requested_resolution_px": [
+      1280,
+      720
+    ],
+    "requested_frame_rate_fps": 30,
+    "backend_reported_frame_rate_fps": 30,
+    "effective_saved_frame_rate_fps": {
+      "standing": 20.62,
+      "walking": 22.61,
+      "no_person": 23.03
+    },
+    "placement": {
+      "mounting_height_cm": 60,
+      "camera_to_subject_distance_cm": 150,
+      "viewing_direction": "Front-facing (observed)",
+      "lower_body_and_feet_visible": true,
+      "visual_review": "Reviewed walking samples at far, middle, and near distances show the subject centered with both feet in frame; all 181 walking image files are currently present. The first 22 standing images are absent, but 143 standing images remain for pose-processing fixtures. No recapture is required to use the existing local input set.",
+      "existing_application_guidance": {
+        "mounting_height_cm": [
+          90,
+          100
+        ],
+        "distance_cm": [
+          200,
+          300
+        ],
+        "view": "front"
+      }
+    },
+    "lighting_conditions": "Two room lights on; daytime; curtains closed"
+  },
+  "examples": [
+    {
+      "role": "representative standing",
+      "fixture_path": "standing/standing_frame_94.png",
+      "annotation_path": "annotations/standing__standing_frame_94.svg",
+      "image_path_relative_to_annotation": "../../../fixtures/standing/standing_frame_94.png",
+      "detection_valid": true,
+      "points": [
+        {
+          "name": "left_hip",
+          "model_index": 11,
+          "confidence": 0.979283869,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "right_hip",
+          "model_index": 12,
+          "confidence": 0.976814747,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "left_knee",
+          "model_index": 13,
+          "confidence": 0.994660616,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "right_knee",
+          "model_index": 14,
+          "confidence": 0.994515181,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "left_ankle",
+          "model_index": 15,
+          "confidence": 0.98863101,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "right_ankle",
+          "model_index": 16,
+          "confidence": 0.989006519,
+          "valid": true,
+          "status": "valid"
+        }
+      ]
+    },
+    {
+      "role": "additional far-walking context",
+      "fixture_path": "walking/walking_far_frame_251.png",
+      "annotation_path": "annotations/walking__walking_far_frame_251.svg",
+      "image_path_relative_to_annotation": "../../../fixtures/walking/walking_far_frame_251.png",
+      "detection_valid": true,
+      "points": [
+        {
+          "name": "left_hip",
+          "model_index": 11,
+          "confidence": 0.995283484,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "right_hip",
+          "model_index": 12,
+          "confidence": 0.994665623,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "left_knee",
+          "model_index": 13,
+          "confidence": 0.996271372,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "right_knee",
+          "model_index": 14,
+          "confidence": 0.996128798,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "left_ankle",
+          "model_index": 15,
+          "confidence": 0.991232753,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "right_ankle",
+          "model_index": 16,
+          "confidence": 0.991187811,
+          "valid": true,
+          "status": "valid"
+        }
+      ]
+    },
+    {
+      "role": "representative walking (mid-distance fixture)",
+      "fixture_path": "walking/walking_mid_frame_298.png",
+      "annotation_path": "annotations/walking__walking_mid_frame_298.svg",
+      "image_path_relative_to_annotation": "../../../fixtures/walking/walking_mid_frame_298.png",
+      "detection_valid": true,
+      "points": [
+        {
+          "name": "left_hip",
+          "model_index": 11,
+          "confidence": 0.995098412,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "right_hip",
+          "model_index": 12,
+          "confidence": 0.995082498,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "left_knee",
+          "model_index": 13,
+          "confidence": 0.997923851,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "right_knee",
+          "model_index": 14,
+          "confidence": 0.998084068,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "left_ankle",
+          "model_index": 15,
+          "confidence": 0.995663345,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "right_ankle",
+          "model_index": 16,
+          "confidence": 0.996048927,
+          "valid": true,
+          "status": "valid"
+        }
+      ]
+    },
+    {
+      "role": "lowest-confidence detected walking sample",
+      "fixture_path": "walking/walking_near_frame_346.png",
+      "annotation_path": "annotations/walking__walking_near_frame_346.svg",
+      "image_path_relative_to_annotation": "../../../fixtures/walking/walking_near_frame_346.png",
+      "detection_valid": true,
+      "points": [
+        {
+          "name": "left_hip",
+          "model_index": 11,
+          "confidence": 0.835633397,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "right_hip",
+          "model_index": 12,
+          "confidence": 0.860340178,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "left_knee",
+          "model_index": 13,
+          "confidence": 0.987252951,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "right_knee",
+          "model_index": 14,
+          "confidence": 0.990933597,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "left_ankle",
+          "model_index": 15,
+          "confidence": 0.984671712,
+          "valid": true,
+          "status": "valid"
+        },
+        {
+          "name": "right_ankle",
+          "model_index": 16,
+          "confidence": 0.988795578,
+          "valid": true,
+          "status": "valid"
+        }
+      ]
+    },
+    {
+      "role": "expected no-person negative",
+      "fixture_path": "no_person/no_person_frame_439.png",
+      "annotation_path": "annotations/no_person__no_person_frame_439.svg",
+      "image_path_relative_to_annotation": "../../../fixtures/no_person/no_person_frame_439.png",
+      "detection_valid": false,
+      "points": [
+        {
+          "name": "left_hip",
+          "model_index": 11,
+          "confidence": null,
+          "valid": false,
+          "status": "missing"
+        },
+        {
+          "name": "right_hip",
+          "model_index": 12,
+          "confidence": null,
+          "valid": false,
+          "status": "missing"
+        },
+        {
+          "name": "left_knee",
+          "model_index": 13,
+          "confidence": null,
+          "valid": false,
+          "status": "missing"
+        },
+        {
+          "name": "right_knee",
+          "model_index": 14,
+          "confidence": null,
+          "valid": false,
+          "status": "missing"
+        },
+        {
+          "name": "left_ankle",
+          "model_index": 15,
+          "confidence": null,
+          "valid": false,
+          "status": "missing"
+        },
+        {
+          "name": "right_ankle",
+          "model_index": 16,
+          "confidence": null,
+          "valid": false,
+          "status": "missing"
+        }
+      ]
+    }
+  ]
+}
