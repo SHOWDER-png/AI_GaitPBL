@@ -14,11 +14,12 @@ config GAIT_IMU_RATE_HZ
 	depends on GAIT_IMU
 
 config GAIT_PLANTAR
-	bool "FSR 402 plantar pressure module via ADS1115 (src/plantar)"
+	bool "FSR 402 plantar pressure module via Adafruit ADS7128 (I2C)"
 	default n
+	depends on I2C
 	help
-	  Off until the plantar hardware is wired and the experiment in
-	  firmware/experiments/plantar_ads1115 works.
+	  Enable the six-channel FSR402 interface using the Adafruit ADS7128
+	  8-channel, 12-bit ADC over the dedicated external I2C bus.
 
 config GAIT_PLANTAR_RATE_HZ
 	int "Plantar sample rate (Hz)"

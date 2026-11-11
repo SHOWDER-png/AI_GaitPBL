@@ -1,100 +1,146 @@
-/*
- * Thingy:53 gait node — main loop. Owner: Nordic.
- *
- * Reads the enabled sensor modules on one shared clock and either sends the
- * samples over BLE (CONFIG_GAIT_BLE=y) or prints them to the USB console.
- */
-#include <zephyr/kernel.h>
+
 #include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
 
-#include "common/gait_types.h"
-#ifdef CONFIG_GAIT_IMU
-#include "imu/imu.h"
-#endif
-#ifdef CONFIG_GAIT_PLANTAR
-#include "plantar/plantar.h"
-#endif
-#ifdef CONFIG_GAIT_BLE
-#include "ble/gait_ble.h"
-#endif
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/sensor.h>
+#include <zephyr/drivers/uart.h>
 
-#ifdef CONFIG_GAIT_IMU
-#define TICK_HZ CONFIG_GAIT_IMU_RATE_HZ
-#else
-#define TICK_HZ 100
-#endif
-
-static void report_init(const char *name, int err)
-{
-	printf("%s init: %s (%d)\n", name, err ? "FAILED" : "ok", err);
-}
+#include "plantar/fsr402.h"
 
 int main(void)
 {
-	bool imu_ok = false, plantar_ok = false, ble_ok = false;
+    /* BMI270 IMU - Kaan's original sensor approach */
+    const struct device *const dev =
+        DEVICE_DT_GET_ONE(bosch_bmi270);
 
-#ifdef CONFIG_GAIT_IMU
-	imu_ok = (imu_init() == 0);
-	report_init("imu", imu_ok ? 0 : -1);
-#endif
-#ifdef CONFIG_GAIT_PLANTAR
-	plantar_ok = (plantar_init() == 0);
-	report_init("plantar", plantar_ok ? 0 : -1);
-#endif
-#ifdef CONFIG_GAIT_BLE
-	ble_ok = (gait_ble_init() == 0);
-	report_init("ble", ble_ok ? 0 : -1);
-#endif
-	ARG_UNUSED(imu_ok);
-	ARG_UNUSED(plantar_ok);
-	ARG_UNUSED(ble_ok);
-	ARG_UNUSED(report_init);
+    struct sensor_value acc[3], gyr[3];
+    struct sensor_value full_scale;
+    struct sensor_value sampling_freq;
+    struct sensor_value oversampling;
 
-	/* Fixed-rate loop: k_sleep(10 ms) in C29 drifted to ~94 Hz, so wait on an absolute deadline. */
-	int64_t next = k_uptime_get();
-	uint32_t tick = 0;
+    /* ADS7128 / FSR402 - six channels */
+    uint16_t fsr_raw[FSR402_CHANNEL_COUNT];
+    bool fsr_ready = false;
 
-	while (1) {
-#ifdef CONFIG_GAIT_IMU
-		if (imu_ok) {
-			struct gait_imu_sample imu;
+    uint32_t dtr = 0;
+    const struct device *uart =
+        DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
 
-			if (imu_read(&imu) == 0) {
-#ifdef CONFIG_GAIT_BLE
-				if (ble_ok) {
-					gait_ble_send_imu(&imu);
-				} else
-#endif
-				{
-					printf("IMU,%u,%.4f,%.4f,%.4f,%.5f,%.5f,%.5f\n", imu.t_ms,
-					       (double)imu.acc[0], (double)imu.acc[1], (double)imu.acc[2],
-					       (double)imu.gyr[0], (double)imu.gyr[1], (double)imu.gyr[2]);
-				}
-			}
-		}
-#endif
+    /* Wait for USB serial host */
+    for (int i = 0; i < 300 && !dtr; i++) {
+        uart_line_ctrl_get(uart, UART_LINE_CTRL_DTR, &dtr);
+        k_msleep(100);
+    }
+    k_msleep(500);
 
-#ifdef CONFIG_GAIT_PLANTAR
-		if (plantar_ok && (tick % (TICK_HZ / CONFIG_GAIT_PLANTAR_RATE_HZ)) == 0) {
-			struct gait_plantar_sample p;
+    printf("\n=== GAIT NODE STARTING ===\n");
 
-			if (plantar_read(&p) == 0) {
-#ifdef CONFIG_GAIT_BLE
-				if (ble_ok) {
-					gait_ble_send_plantar(&p);
-				} else
-#endif
-				{
-					printf("FSR,%u,%d,%d,%d,%d,%d,%d\n", p.t_ms,
-					       p.raw[0], p.raw[1], p.raw[2], p.raw[3], p.raw[4], p.raw[5]);
-				}
-			}
-		}
-#endif
+    /* Initialize BMI270 */
+    if (!device_is_ready(dev)) {
+        printf("BMI270 device is not ready\n");
+    } else {
+        printf("BMI270 device ready: %s\n", dev->name);
 
-		tick++;
-		next += 1000 / TICK_HZ;
-		k_sleep(K_TIMEOUT_ABS_MS(next));
-	}
-	return 0;
+        /* Accelerometer settings */
+        full_scale.val1 = 2;
+        full_scale.val2 = 0;
+
+        sampling_freq.val1 = 100;
+        sampling_freq.val2 = 0;
+
+        oversampling.val1 = 1;
+        oversampling.val2 = 0;
+
+        sensor_attr_set(dev, SENSOR_CHAN_ACCEL_XYZ,
+                        SENSOR_ATTR_FULL_SCALE, &full_scale);
+
+        sensor_attr_set(dev, SENSOR_CHAN_ACCEL_XYZ,
+                        SENSOR_ATTR_OVERSAMPLING, &oversampling);
+
+        sensor_attr_set(dev, SENSOR_CHAN_ACCEL_XYZ,
+                        SENSOR_ATTR_SAMPLING_FREQUENCY,
+                        &sampling_freq);
+
+        /* Gyroscope settings */
+        full_scale.val1 = 500;
+        full_scale.val2 = 0;
+
+        sensor_attr_set(dev, SENSOR_CHAN_GYRO_XYZ,
+                        SENSOR_ATTR_FULL_SCALE, &full_scale);
+
+        sensor_attr_set(dev, SENSOR_CHAN_GYRO_XYZ,
+                        SENSOR_ATTR_OVERSAMPLING, &oversampling);
+
+        sensor_attr_set(dev, SENSOR_CHAN_GYRO_XYZ,
+                        SENSOR_ATTR_SAMPLING_FREQUENCY,
+                        &sampling_freq);
+    }
+
+    /* Initialize ADS7128 / FSR402 */
+    printf("\n=== FSR402 ADS7128 initialization ===\n");
+
+    if (fsr402_init() == 0) {
+        fsr_ready = true;
+        printf("FSR402 ADS7128 initialized\n");
+    } else {
+        printf("FSR402 ADS7128 initialization failed\n");
+    }
+
+    printf("\n=== GAIT NODE SAMPLING STARTED ===\n");
+
+    while (1) {
+        k_msleep(10);
+
+        /* Read BMI270 */
+        if (device_is_ready(dev)) {
+            int rc = sensor_sample_fetch(dev);
+
+            if (rc == 0) {
+                rc = sensor_channel_get(
+                    dev, SENSOR_CHAN_ACCEL_XYZ, acc);
+
+                if (rc == 0) {
+                    rc = sensor_channel_get(
+                        dev, SENSOR_CHAN_GYRO_XYZ, gyr);
+                }
+            }
+
+            if (rc == 0) {
+                printf(
+                    "IMU,AX=%d.%06d,AY=%d.%06d,AZ=%d.%06d,"
+                    "GX=%d.%06d,GY=%d.%06d,GZ=%d.%06d\n",
+                    acc[0].val1, acc[0].val2,
+                    acc[1].val1, acc[1].val2,
+                    acc[2].val1, acc[2].val2,
+                    gyr[0].val1, gyr[0].val2,
+                    gyr[1].val1, gyr[1].val2,
+                    gyr[2].val1, gyr[2].val2
+                );
+            } else {
+                printf("IMU read failed: rc=%d\n", rc);
+            }
+        }
+
+        /* Read six FSR402 channels through ADS7128 */
+        if (fsr_ready) {
+            int rc = fsr402_read_all(fsr_raw);
+
+            if (rc == 0) {
+                printf(
+                    "FSR,t_ms=%u,LH=%u,LB=%u,LT=%u,"
+                    "RH=%u,RB=%u,RT=%u\n",
+                    k_uptime_get_32(),
+                    fsr_raw[0], fsr_raw[1], fsr_raw[2],
+                    fsr_raw[3], fsr_raw[4], fsr_raw[5]
+                );
+            } else {
+                printf("FSR read failed: rc=%d\n", rc);
+            }
+        }
+    }
+
+    return 0;
 }
