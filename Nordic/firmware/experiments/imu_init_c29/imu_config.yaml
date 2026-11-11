@@ -1,0 +1,150 @@
+task: "Record Thingy:53 IMU identity, axes, units, and target rate"
+unit_id: C29
+
+identity:
+  board: "Nordic Thingy:53"
+  board_serial: "0CDBA84D75B0B984"
+  board_revision: "1.1.0"
+  board_revision_source: "label on product box (dated 2025.03); not read from PCB"
+  sdk: "nRF Connect SDK v3.3.4 (Zephyr 4.3.99)"
+  toolchain: "v3.3.4"
+  build_target: "thingy53/nrf5340/cpuapp"
+  build_system: "sysbuild with MCUboot"
+  imu_model: "Bosch BMI270"
+  devicetree_node: "bmi270 (spi-dev-bmi270@1, enabled by app.overlay)"
+  console: "USB CDC ACM serial, 115200 baud"
+
+imu_config:
+  source_file: "C:/imu_test/src/main.c (Zephyr BMI270 sample)"
+  accelerometer:
+    range: "+/-2 g"
+    data_rate_hz: 100
+    oversampling: 1
+    output_unit: "m/s^2"
+    source_lines: "main.c 28-45"
+  gyroscope:
+    range: "+/-500 dps"
+    data_rate_hz: 100
+    oversampling: 1
+    output_unit: "rad/s"
+    source_lines: "main.c 49-66"
+  target_data_rate_hz: 100
+  observed_stream_rate_hz: 94
+  observed_rate_note: "sample sleeps 10 ms per loop plus read time; timestamps are PC-side"
+
+precision:
+  datasheet: "Bosch BMI270 datasheet BST-BMI270-DS000-07 rev 1.5 (March 2023)"
+  resolution_bits: 16
+  accel_sensitivity_lsb_per_g: 16384
+  gyro_sensitivity_lsb_per_dps: 65.536
+  accel_lsb_mps2: 0.0006
+  gyro_lsb_rads: 0.00027
+  datasheet_offset_limits: "+/-20 mg accelerometer, +/-0.5 dps gyro"
+
+axis_convention:
+  frame: "chip frame as reported by Zephyr, right-handed"
+  view: "top of board, USB connector at the bottom"
+  accel_positive_x: "toward top edge (away from USB)"
+  accel_positive_y: "toward right edge"
+  accel_positive_z: "down through the PCB"
+  accel_sign_rule: "reads +g on the axis pointing up"
+  gyro_positive_x: "left edge up, right edge down"
+  gyro_positive_y: "far edge up, USB edge down"
+  gyro_positive_z: "clockwise seen from above"
+
+csv_columns: "t_ms, ax_mps2, ay_mps2, az_mps2, gx_rads, gy_rads, gz_rads"
+
+samples:
+  - file: data/stationary_top_up.csv
+    seconds: 15
+    rows: 1406
+    description: "board flat, top face up"
+    result: "mean az = -9.805 m/s^2"
+  - file: data/stationary_top_down.csv
+    seconds: 15
+    rows: 1406
+    description: "board flat, top face down"
+    result: "mean az = +9.494 m/s^2"
+  - file: data/rot_z_cw_from_top.csv
+    seconds: 10
+    rows: 942
+    description: "about one clockwise turn seen from above, hand-turned"
+    result: "gz integrated +388 deg"
+  - file: data/acc_x_edge_up.csv
+    seconds: 8
+    rows: 758
+    description: "LEFT edge up (file name is misleading; this measures Y)"
+    result: "ay = -9.65 m/s^2"
+  - file: data/acc_left_edge_up_v2.csv
+    seconds: 8
+    rows: 758
+    description: "left edge up, repeat with photo"
+    result: "ay = -9.79 m/s^2"
+  - file: data/acc_usb_edge_up.csv
+    seconds: 8
+    rows: 758
+    description: "USB edge up"
+    result: "ax = -9.50 m/s^2"
+  - file: data/rot_x_left_edge_up.csv
+    seconds: 8
+    rows: 757
+    description: "left edge lifted by hand, right edge down"
+    result: "gx integrated +53 deg"
+  - file: data/rot_y_far_edge_up.csv
+    seconds: 8
+    rows: 758
+    description: "far edge lifted by hand, USB edge down"
+    result: "gy integrated +49 deg"
+
+anomalies_and_limitations:
+  - "Sample prints negative values in split form (0.-29329 means -0.029329); capture_imu.ps1 converts them."
+  - "Observed stream about 94 Hz vs 100 Hz target; PC-side timestamps include USB jitter."
+  - "Gravity magnitude varied 9.57 to 9.95 m/s^2 across positions; sensor is uncalibrated."
+  - "Z offset about -0.16 m/s^2 from flip test (rough; board may not have been level)."
+  - "Gyro rest readings 0.002-0.005 rad/s; no calibration applied."
+  - "Gyro motion tests done by hand; cross-axis coupling not characterised."
+  - "PCB axis symbol looked 90 deg different from measured axes; measurements used."
+  - "SDK v3.4.0 failed to build (devicetree error); v3.3.4 used."
+  - "No BLE or i.MX95 in this task."
+  
+imu_init:
+  source_files: "src/imu_init.h, src/imu_init.c, src/main.c (project imu_init_c29)"
+  device:
+    model: "Bosch BMI270"
+    bus: "SPI, node spi-dev-bmi270@1 on spi@c000 (chip select 1, max 8 MHz)"
+    settings: "accel +/-2 g, gyro +/-500 dps, 100 Hz, oversampling 1 (see imu_config)"
+  function: "enum imu_status imu_init(const struct device *dev, enum imu_fault fault)"
+  readiness_api: "imu_is_ready() returns true only after IMU_OK; imu_status_str() names a status"
+  dependencies: "no BLE, no i.MX95"
+  status_codes:
+    IMU_OK: "all settings applied and one valid sample read"
+    IMU_ERR_NOT_READY: "device missing/unpowered, driver init failed, or no response while setting"
+    IMU_ERR_CONFIG_INVALID: "sensor rejected a setting (-EINVAL, -ENOTSUP, -ENOSYS)"
+    IMU_ERR_TIMEOUT: "no valid sample within the retry limit"
+  return_value_checks:
+    - "device_is_ready()"
+    - "sensor_attr_set() x6 (full scale, oversampling, sampling frequency for accel and gyro)"
+    - "sensor_sample_fetch(), sensor_channel_get() accel and gyro"
+  retry_policy:
+    attribute_writes: "3 attempts, 20 ms apart; no retry on -EINVAL/-ENOTSUP/-ENOSYS (retry cannot help)"
+    sample_check: "10 attempts, 20 ms apart (about 200 ms plus fetch time)"
+    device_ready: "no retry; Zephyr initializes the device once at boot and the app cannot safely re-run it"
+  tests:
+    method: "fault injection parameter; simulated faults never touch hardware or the stored ready flag"
+    simulated_not_ready: "PASS"
+    simulated_config_invalid: "PASS (1 attempt, no retry)"
+    simulated_timeout: "PASS (10 attempts, then error)"
+    real_hardware: "PASS"
+  hardware_run:
+    unit: "C29, Thingy:53 serial 0CDBA84D75B0B984"
+    sdk: "nRF Connect SDK v3.3.4, Zephyr 4.3.99"
+    log_file: "init_log_hardware.txt"
+    result: "init OK on the 3rd sample attempt; first 2 checks returned no data (rc=-61), so the sensor needs roughly 40 ms to deliver its first sample"
+  limitations:
+    - "Missing-device and invalid-setting cases are simulated; the on-board sensor cannot be unplugged and no real driver rejection was observed."
+    - "The mock tests the init logic, not SPI wiring faults."
+    - "Only one hardware boot was recorded."
+    - "Boot waits up to 30 s for a PC to open the USB serial port before running init; without a PC init starts after that delay."
+    - "Timeout is counted in attempts, not measured wall-clock time."
+    - "Fault injection is a function parameter; production code should pass IMU_FAULT_NONE."
+    - "prj.conf still contains CONFIG_I2C=y left over from the sample; the BMI270 is on SPI."

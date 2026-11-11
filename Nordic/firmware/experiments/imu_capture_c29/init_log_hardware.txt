@@ -1,0 +1,40 @@
+*** Booting nRF Connect SDK v3.3.4-b096d30d893b ***
+*** Using Zephyr OS v4.3.99-37e6c28576ee ***
+=== IMU init self-test (C29) ===
+IMU: init start (SIMULATED FAULT)
+IMU: ERROR device not ready (missing, unpowered or driver init failed)
+TEST simulated_not_ready  want=NOT_READY      got=NOT_READY      PASS
+IMU: init start (SIMULATED FAULT)
+IMU: set accel full scale [g] = 2 failed, rc=-22 (attempt 1/3)
+IMU: ERROR sensor rejected 'accel full scale [g]' (rc=-22)
+TEST simulated_config     want=CONFIG_INVALID got=CONFIG_INVALID PASS
+IMU: init start (SIMULATED FAULT)
+IMU: sample check failed, rc=-11 (attempt 1/10)
+IMU: sample check failed, rc=-11 (attempt 2/10)
+IMU: sample check failed, rc=-11 (attempt 3/10)
+IMU: sample check failed, rc=-11 (attempt 4/10)
+IMU: sample check failed, rc=-11 (attempt 5/10)
+IMU: sample check failed, rc=-11 (attempt 6/10)
+IMU: sample check failed, rc=-11 (attempt 7/10)
+IMU: sample check failed, rc=-11 (attempt 8/10)
+IMU: sample check failed, rc=-11 (attempt 9/10)
+IMU: sample check failed, rc=-11 (attempt 10/10)
+IMU: ERROR no valid sample after 10 attempts
+TEST simulated_timeout    want=TIMEOUT        got=TIMEOUT        PASS
+IMU: init start
+IMU: sample check failed, rc=-61 (attempt 1/10)
+IMU: sample check failed, rc=-61 (attempt 2/10)
+IMU: init OK (accel +/-2 g, gyro +/-500 dps, 100 Hz)
+TEST real_hardware        want=OK             got=OK             PASS
+=== self-test done: 0 failure(s), imu_is_ready=1 ===
+AX: 0.-47286; AY: 0.-150240; AZ: -9.-832089; GX: 0.000000; GY: 0.000000; GZ: 0.000000;
+AX: 0.-64645; AY: 0.-144853; AZ: -9.-815927; GX: 0.002130; GY: 0.003462; GZ: 0.004261;
+AX: 0.-52075; AY: 0.-153832; AZ: -9.-793780; GX: 0.000266; GY: 0.005326; GZ: 0.002130;
+AX: 0.-55666; AY: 0.-159817; AZ: -9.-809942; GX: 0.003462; GY: 0.003462; GZ: 0.001597;
+AX: 0.-47286; AY: 0.-144853; AZ: -9.-804555; GX: 0.003195; GY: 0.003728; GZ: 0.001065;
+AX: 0.-62251; AY: 0.-149043; AZ: -9.-820117; GX: 0.002130; GY: 0.005326; GZ: 0.001331;
+AX: 0.-55666; AY: 0.-146649; AZ: -9.-803357; GX: 0.003462; GY: 0.004261; GZ: 0.001864;
+AX: 0.-68236; AY: 0.-158022; AZ: -9.-828497; GX: 0.002929; GY: 0.004261; GZ: 0.002396;
+AX: 0.-63448; AY: 0.-160416; AZ: -9.-812336; GX: 0.003195; GY: 0.003462; GZ: 0.001331;
+AX: 0.-46688; AY: 0.-147846; AZ: -9.-801562; GX: 0.003728; GY: 0.004527; GZ: 0.001864;
+AX: 0.-56864; AY: 0.-147846; AZ: -9.-810540; GX: 0.003195; GY: 0.005326; GZ: 0.003462;
