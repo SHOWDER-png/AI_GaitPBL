@@ -1,26 +1,44 @@
-/* Devicetree overlay for thingy53/nrf5340/cpuapp */
+/* Thingy:53 gait_node overlay
+ *
+ * BMI270 remains enabled on the board's existing SPI bus.
+ *
+ * ADS7128 uses a dedicated external I2C bus on the Thingy:53 expansion pins:
+ *   P0.04 = EXP_BOARD_PIN1 = SDA
+ *   P0.05 = EXP_BOARD_PIN2 = SCL
+ *
+ * The ADS7128 board is left at its factory I2C address 0x10.
+ * This is safe here because this overlay uses i2c0 on P0.04/P0.05,
+ * not the Thingy:53 onboard-sensor i2c1 bus (which already has BMM150 at 0x10).
+ */
+#include <zephyr/dt-bindings/pinctrl/nrf-pinctrl.h>
 
-/* IMU owner: BMI270 on SPI, as in experiments/imu_bmi270_c29 */
+/* IMU owner: BMI270 on SPI, unchanged. */
 &bmi270 {
 	status = "okay";
 };
 
-/*
- * Plantar owner: ADS1115 ADC(s) for the six FSR 402 sensors.
- * One ADS1115 has 4 inputs, so six FSRs need TWO chips (ADDR pin → 0x48 and 0x49).
- * TODO: pick the I2C bus and pins that are reachable on the Thingy:53, then
- *       uncomment and fill in. Record the choice in hardware/PLANTAR_WIRING.md.
- *
- * &i2cX {
- *	ads1115_a: ads1115@48 {
- *		compatible = "ti,ads1115";
- *		reg = <0x48>;
- *		#io-channel-cells = <1>;
- *	};
- *	ads1115_b: ads1115@49 {
- *		compatible = "ti,ads1115";
- *		reg = <0x49>;
- *		#io-channel-cells = <1>;
- *	};
- * };
- */
+/* Dedicated external I2C bus for the ADS7128 breakout. */
+&pinctrl {
+	i2c0_ext_default: i2c0_ext_default {
+		group1 {
+			psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
+				<NRF_PSEL(TWIM_SCL, 0, 5)>;
+		};
+	};
+
+	i2c0_ext_sleep: i2c0_ext_sleep {
+		group1 {
+			psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
+				<NRF_PSEL(TWIM_SCL, 0, 5)>;
+			low-power-enable;
+		};
+	};
+};
+
+&i2c0 {
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	pinctrl-0 = <&i2c0_ext_default>;
+	pinctrl-1 = <&i2c0_ext_sleep>;
+	pinctrl-names = "default", "sleep";
+};
