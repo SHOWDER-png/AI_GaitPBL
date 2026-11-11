@@ -78,6 +78,36 @@ if(BUILD_TESTING)
     target_link_libraries(offline_validation_tests PRIVATE ${OpenCV_LIBS})
     add_test(NAME offline_validation_tests COMMAND offline_validation_tests)
 
+    add_executable(frame_quality_tests tests/frame_quality_tests.cpp)
+    target_include_directories(frame_quality_tests PRIVATE
+        src
+        ${OpenCV_INCLUDE_DIRS}
+        ${ONNXRUNTIME_ROOT}/include/onnxruntime
+        ${ONNXRUNTIME_ROOT}/include
+    )
+    add_test(NAME frame_quality_tests COMMAND frame_quality_tests)
+
+    # Replay over the real fixtures (needs models/yolov8n-pose.onnx); run from Camera/.
+    add_executable(frame_quality_replay
+        tests/frame_quality_replay.cpp
+        src/pose_detector.cpp
+    )
+    target_include_directories(frame_quality_replay PRIVATE
+        src
+        ${OpenCV_INCLUDE_DIRS}
+        ${ONNXRUNTIME_ROOT}/include/onnxruntime
+        ${ONNXRUNTIME_ROOT}/include
+    )
+    target_link_libraries(frame_quality_replay PRIVATE ${OpenCV_LIBS})
+    if(APPLE)
+        target_link_libraries(frame_quality_replay PRIVATE ${ONNXRUNTIME_ROOT}/lib/libonnxruntime.dylib)
+    else()
+        target_link_libraries(frame_quality_replay PRIVATE ${ONNXRUNTIME_ROOT}/lib/libonnxruntime.so)
+    endif()
+    add_test(NAME frame_quality_replay
+        COMMAND frame_quality_replay
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
     add_executable(board_camera_tests tests/board_camera_tests.cpp)
     target_include_directories(board_camera_tests PRIVATE src)
     add_test(NAME board_camera_tests COMMAND board_camera_tests)
