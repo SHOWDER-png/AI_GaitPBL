@@ -1,0 +1,17 @@
+SCRUM-362 capture metrics: stationary_60s
+file                    : C:\imu_capture_c29\data\stationary_60s.csv
+header lines            : 8
+stale lines discarded   : 16  (buffered rows from the previous capture, before the header)
+boot log lines          : 0  (kept as '# log:' comments)
+target rate             : 100 Hz (period 10000 us)
+valid samples (n)       : 5950   (bad data lines: 0)
+seq range               : 0 .. 5949  (expected 5950)
+lost samples            : 0   loss = 0.000 %
+duration (t_us)         : 59.490 s
+schedule rate           : 100.000 Hz
+effective sample rate   : 100.000 Hz
+non-monotonic timestamps: 0
+dt mean / min / max     : 10000.0 / 9948 / 10070 us   (consecutive samples only, n=5949)
+jitter (std of dt)      : 16.0 us
+max |dt - period|       : 70 us
+device counters (last)  : # STAT slots=5900 written=5900 dropped=0 read_errors=0
