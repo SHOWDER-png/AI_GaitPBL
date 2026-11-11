@@ -1,0 +1,161 @@
+{
+  "frames_time_not_increasing.csv": {
+    "error_contains": "must increase",
+    "kind": "frames_csv",
+    "valid": false
+  },
+  "frames_valid.csv": {
+    "kind": "frames_csv",
+    "valid": true
+  },
+  "gait_bad_header.csv": {
+    "error_contains": "header must be",
+    "kind": "gait_csv",
+    "valid": false
+  },
+  "gait_bad_phase.csv": {
+    "error_contains": "squat_phase",
+    "kind": "gait_csv",
+    "valid": false
+  },
+  "gait_compress_out_of_range.csv": {
+    "error_contains": "within 0..1",
+    "kind": "gait_csv",
+    "valid": false
+  },
+  "gait_knee_out_of_range.csv": {
+    "error_contains": "0..180",
+    "kind": "gait_csv",
+    "valid": false
+  },
+  "gait_not_visible.csv": {
+    "kind": "gait_csv",
+    "valid": true
+  },
+  "gait_time_backwards.csv": {
+    "error_contains": "goes backwards",
+    "kind": "gait_csv",
+    "valid": false
+  },
+  "gait_valid.csv": {
+    "kind": "gait_csv",
+    "valid": true
+  },
+  "imu_accel_out_of_range.csv": {
+    "error_contains": "+/-2 g",
+    "kind": "imu_csv",
+    "valid": false
+  },
+  "imu_bad_header.csv": {
+    "error_contains": "header must be",
+    "kind": "imu_csv",
+    "valid": false
+  },
+  "imu_gap.csv": {
+    "kind": "imu_csv",
+    "valid": true,
+    "warnings": 1
+  },
+  "imu_gyro_out_of_range.csv": {
+    "error_contains": "+/-500 dps",
+    "kind": "imu_csv",
+    "valid": false
+  },
+  "imu_header_only.csv": {
+    "error_contains": "no samples",
+    "kind": "imu_csv",
+    "valid": false
+  },
+  "imu_missing_column.csv": {
+    "error_contains": "expected 7 columns",
+    "kind": "imu_csv",
+    "valid": false
+  },
+  "imu_not_a_number.csv": {
+    "error_contains": "not finite",
+    "kind": "imu_csv",
+    "valid": false
+  },
+  "imu_time_backwards.csv": {
+    "error_contains": "goes backwards",
+    "kind": "imu_csv",
+    "valid": false
+  },
+  "imu_valid.csv": {
+    "kind": "imu_csv",
+    "valid": true,
+    "warnings": 0
+  },
+  "lower_body_bad_schema_version.jsonl": {
+    "error_contains": "schema_version",
+    "kind": "lower_body",
+    "valid": false
+  },
+  "lower_body_confidence_out_of_range.jsonl": {
+    "error_contains": "within 0..1",
+    "kind": "lower_body",
+    "valid": false
+  },
+  "lower_body_empty.jsonl": {
+    "error_contains": "no records",
+    "kind": "lower_body",
+    "valid": false
+  },
+  "lower_body_low_confidence.jsonl": {
+    "kind": "lower_body",
+    "valid": true
+  },
+  "lower_body_missing_point.jsonl": {
+    "error_contains": "exactly 6",
+    "kind": "lower_body",
+    "valid": false
+  },
+  "lower_body_nan_value.jsonl": {
+    "error_contains": "invalid JSON",
+    "kind": "lower_body",
+    "valid": false
+  },
+  "lower_body_no_person.jsonl": {
+    "kind": "lower_body",
+    "valid": true
+  },
+  "lower_body_no_person_with_valid_point.jsonl": {
+    "error_contains": "must not contain valid points",
+    "kind": "lower_body",
+    "valid": false
+  },
+  "lower_body_timestamp_backwards.jsonl": {
+    "error_contains": "goes backwards",
+    "kind": "lower_body",
+    "valid": false
+  },
+  "lower_body_truncated.jsonl": {
+    "error_contains": "invalid JSON",
+    "kind": "lower_body",
+    "valid": false
+  },
+  "lower_body_unknown_reason.jsonl": {
+    "error_contains": "unknown reason",
+    "kind": "lower_body",
+    "valid": false
+  },
+  "lower_body_valid.jsonl": {
+    "kind": "lower_body",
+    "valid": true
+  },
+  "lower_body_valid_below_threshold.jsonl": {
+    "error_contains": "below the threshold",
+    "kind": "lower_body",
+    "valid": false
+  },
+  "lower_body_valid_with_reason.jsonl": {
+    "error_contains": "valid but has reasons",
+    "kind": "lower_body",
+    "valid": false
+  },
+  "lower_body_wrong_point_order.jsonl": {
+    "error_contains": "must be left_hip",
+    "kind": "lower_body",
+    "valid": false
+  }
+}
