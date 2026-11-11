@@ -77,4 +77,8 @@ if(BUILD_TESTING)
     )
     target_link_libraries(offline_validation_tests PRIVATE ${OpenCV_LIBS})
     add_test(NAME offline_validation_tests COMMAND offline_validation_tests)
+
+    add_executable(board_camera_tests tests/board_camera_tests.cpp)
+    target_include_directories(board_camera_tests PRIVATE src)
+    add_test(NAME board_camera_tests COMMAND board_camera_tests)
 endif()
