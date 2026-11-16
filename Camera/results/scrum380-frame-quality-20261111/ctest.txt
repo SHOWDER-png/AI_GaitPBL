@@ -1,0 +1,5 @@
+1/4 Test #1: offline_validation_tests .........   Passed    0.20 sec
+2/4 Test #2: frame_quality_tests ..............   Passed    0.00 sec
+3/4 Test #3: frame_quality_replay .............   Passed    0.70 sec
+4/4 Test #4: board_camera_tests ...............   Passed    0.00 sec
+100% tests passed out of 4

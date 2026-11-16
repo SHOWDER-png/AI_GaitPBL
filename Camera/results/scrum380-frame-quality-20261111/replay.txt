@@ -1,0 +1,8 @@
+[PoseDetector] Loaded: models/yolov8n-pose.onnx
+fixture,verdict,valid_lower_body,late_verdict,reason
+standing/standing_frame_94.png,OK,6,STALE_DATA,-
+walking/walking_far_frame_251.png,OK,6,STALE_DATA,-
+walking/walking_mid_frame_298.png,OK,6,STALE_DATA,-
+walking/walking_near_frame_346.png,OK,6,STALE_DATA,-
+no_person/no_person_frame_439.png,NO_PERSON,0,STALE_DATA,no person detected
+REPLAY PASS (5 fixtures)

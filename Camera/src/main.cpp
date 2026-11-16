@@ -15,6 +15,7 @@
 #include "offline_inference.h"
 #include "offline_validation.h"
 #include "board_camera.h"
+#include "frame_quality.h"
 
 volatile sig_atomic_t g_running = 1;
 void signal_handler(int) { g_running = 0; }
@@ -460,8 +461,21 @@ int main(int argc, char* argv[]) {
     // Current gait result (shared between loop iterations)
     GaitResult current_g;
 
+    // Per-frame quality gate (SCRUM-380): no person, stale, low confidence, bad timestamps.
+    // The virtual-hip fallback in compute_gait covers hidden hips, so hips are optional here.
+    frame_quality::Config quality_config;
+    quality_config.hips_required = false;
+    frame_quality::Tracker quality_tracker(quality_config);
+    frame_quality::Status last_quality = frame_quality::Status::OK;
+    long long quality_counts[5] = {0, 0, 0, 0, 0};
+    auto ms_since_start = [&t0]() {
+        return std::chrono::duration<double, std::milli>(
+                   std::chrono::steady_clock::now() - t0).count();
+    };
+
     while (g_running) {
         if (!cap.read(frame) || frame.empty()) break;
+        const double capture_ms = ms_since_start();
 
         auto t1      = std::chrono::steady_clock::now();
         auto dets    = detector.detect(frame, 0.3f);
@@ -512,7 +526,18 @@ int main(int argc, char* argv[]) {
             {frame.cols-160, 25},
             cv::FONT_HERSHEY_SIMPLEX, 0.6, {0,255,0}, 2);
 
-        if (!dets.empty()) {
+        const auto quality = quality_tracker.assess(
+            dets.empty() ? nullptr : &dets[0], capture_ms, ms_since_start());
+        ++quality_counts[static_cast<int>(quality.status)];
+        if (quality.status != last_quality) {
+            std::cout << ">> [quality] " << frame_quality::to_string(last_quality) << " -> "
+                      << frame_quality::to_string(quality.status);
+            for (const auto& reason : quality.reasons) std::cout << " | " << reason;
+            std::cout << "\n";
+            last_quality = quality.status;
+        }
+
+        if (quality.usable()) {
             auto& lm = dets[0].kpts;
             current_g = compute_gait(lm);
 
@@ -598,8 +623,18 @@ int main(int argc, char* argv[]) {
                     cv::FONT_HERSHEY_SIMPLEX, 0.65, {0,0,255}, 2);
 
         } else {
-            cv::putText(frame, "No person detected", {20,40},
+            // Never let an old gait result survive: test keys A/B/E/D read current_g.
+            current_g = GaitResult{};
+            const char* message =
+                quality.status == frame_quality::Status::NO_PERSON      ? "No person detected" :
+                quality.status == frame_quality::Status::LOW_CONFIDENCE ? "Low confidence: legs not clearly visible" :
+                quality.status == frame_quality::Status::STALE_DATA     ? "Stale data: result too old, ignored" :
+                                                                          "Invalid frame data, ignored";
+            cv::putText(frame, message, {20,40},
                 cv::FONT_HERSHEY_SIMPLEX, 0.8, {0,0,255}, 2);
+            if (!quality.reasons.empty())
+                cv::putText(frame, quality.reasons.front(), {20,70},
+                    cv::FONT_HERSHEY_SIMPLEX, 0.55, {0,0,255}, 1);
         }
 
         // Show logged tests count
@@ -759,6 +794,12 @@ int main(int argc, char* argv[]) {
             std::cout << ">> Report saved to validation_report.txt\n";
         }
     }
+
+    std::cout << ">> Frame quality summary (after calibration):";
+    for (int s = 0; s < 5; ++s)
+        std::cout << " " << frame_quality::to_string(static_cast<frame_quality::Status>(s))
+                  << "=" << quality_counts[s];
+    std::cout << "\n";
 
     cap.release();
     cv::destroyAllWindows();
