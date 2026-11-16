@@ -1,146 +1,77 @@
-
+/*
+ * gait_node main: initialise the modules and start one thread per sensor.
+ * No sampling here: each sensor is read only by its own thread
+ * (imu/imu_thread.c, plantar/plantar_thread.c).
+ */
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
-#include <zephyr/drivers/sensor.h>
 #include <zephyr/drivers/uart.h>
 
+#ifdef CONFIG_GAIT_IMU
+#include "imu/imu.h"
+#include "imu/imu_thread.h"
+#endif
+#ifdef CONFIG_GAIT_PLANTAR
 #include "plantar/fsr402.h"
+#include "plantar/plantar_thread.h"
+#endif
+#ifdef CONFIG_GAIT_BLE
+#include "ble/gait_ble.h"
+#endif
 
 int main(void)
 {
-    /* BMI270 IMU - Kaan's original sensor approach */
-    const struct device *const dev =
-        DEVICE_DT_GET_ONE(bosch_bmi270);
+	uint32_t dtr = 0;
+	const struct device *uart = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
 
-    struct sensor_value acc[3], gyr[3];
-    struct sensor_value full_scale;
-    struct sensor_value sampling_freq;
-    struct sensor_value oversampling;
+	/* Wait for USB serial host (up to 30 s) */
+	for (int i = 0; i < 300 && !dtr; i++) {
+		uart_line_ctrl_get(uart, UART_LINE_CTRL_DTR, &dtr);
+		k_msleep(100);
+	}
+	k_msleep(500);
 
-    /* ADS7128 / FSR402 - six channels */
-    uint16_t fsr_raw[FSR402_CHANNEL_COUNT];
-    bool fsr_ready = false;
+	printf("\n=== GAIT NODE STARTING ===\n");
 
-    uint32_t dtr = 0;
-    const struct device *uart =
-        DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
+#ifdef CONFIG_GAIT_IMU
+	bool imu_ready = (imu_init() == 0);
 
-    /* Wait for USB serial host */
-    for (int i = 0; i < 300 && !dtr; i++) {
-        uart_line_ctrl_get(uart, UART_LINE_CTRL_DTR, &dtr);
-        k_msleep(100);
-    }
-    k_msleep(500);
+	printf(imu_ready ? "BMI270 initialized\n" : "BMI270 initialization failed\n");
+#endif
 
-    printf("\n=== GAIT NODE STARTING ===\n");
+#ifdef CONFIG_GAIT_PLANTAR
+	bool fsr_ready = (fsr402_init() == 0);
 
-    /* Initialize BMI270 */
-    if (!device_is_ready(dev)) {
-        printf("BMI270 device is not ready\n");
-    } else {
-        printf("BMI270 device ready: %s\n", dev->name);
+	printf(fsr_ready ? "FSR402 ADS7128 initialized\n"
+			 : "FSR402 ADS7128 initialization failed\n");
+#endif
 
-        /* Accelerometer settings */
-        full_scale.val1 = 2;
-        full_scale.val2 = 0;
+#ifdef CONFIG_GAIT_BLE
+	/* Start Bluetooth: advertise as "GaitNode" and wait for a central */
+	int ble_rc = gait_ble_init();
 
-        sampling_freq.val1 = 100;
-        sampling_freq.val2 = 0;
+	if (ble_rc != 0) {
+		printf("BLE init failed: rc=%d\n", ble_rc);
+	}
+#endif
 
-        oversampling.val1 = 1;
-        oversampling.val2 = 0;
+#ifdef CONFIG_GAIT_IMU
+	if (imu_ready) {
+		imu_thread_start();
+	}
+#endif
+#ifdef CONFIG_GAIT_PLANTAR
+	if (fsr_ready) {
+		plantar_thread_start();
+	}
+#endif
 
-        sensor_attr_set(dev, SENSOR_CHAN_ACCEL_XYZ,
-                        SENSOR_ATTR_FULL_SCALE, &full_scale);
+	printf("\n=== GAIT NODE SAMPLING STARTED ===\n");
 
-        sensor_attr_set(dev, SENSOR_CHAN_ACCEL_XYZ,
-                        SENSOR_ATTR_OVERSAMPLING, &oversampling);
-
-        sensor_attr_set(dev, SENSOR_CHAN_ACCEL_XYZ,
-                        SENSOR_ATTR_SAMPLING_FREQUENCY,
-                        &sampling_freq);
-
-        /* Gyroscope settings */
-        full_scale.val1 = 500;
-        full_scale.val2 = 0;
-
-        sensor_attr_set(dev, SENSOR_CHAN_GYRO_XYZ,
-                        SENSOR_ATTR_FULL_SCALE, &full_scale);
-
-        sensor_attr_set(dev, SENSOR_CHAN_GYRO_XYZ,
-                        SENSOR_ATTR_OVERSAMPLING, &oversampling);
-
-        sensor_attr_set(dev, SENSOR_CHAN_GYRO_XYZ,
-                        SENSOR_ATTR_SAMPLING_FREQUENCY,
-                        &sampling_freq);
-    }
-
-    /* Initialize ADS7128 / FSR402 */
-    printf("\n=== FSR402 ADS7128 initialization ===\n");
-
-    if (fsr402_init() == 0) {
-        fsr_ready = true;
-        printf("FSR402 ADS7128 initialized\n");
-    } else {
-        printf("FSR402 ADS7128 initialization failed\n");
-    }
-
-    printf("\n=== GAIT NODE SAMPLING STARTED ===\n");
-
-    while (1) {
-        k_msleep(10);
-
-        /* Read BMI270 */
-        if (device_is_ready(dev)) {
-            int rc = sensor_sample_fetch(dev);
-
-            if (rc == 0) {
-                rc = sensor_channel_get(
-                    dev, SENSOR_CHAN_ACCEL_XYZ, acc);
-
-                if (rc == 0) {
-                    rc = sensor_channel_get(
-                        dev, SENSOR_CHAN_GYRO_XYZ, gyr);
-                }
-            }
-
-            if (rc == 0) {
-                printf(
-                    "IMU,AX=%d.%06d,AY=%d.%06d,AZ=%d.%06d,"
-                    "GX=%d.%06d,GY=%d.%06d,GZ=%d.%06d\n",
-                    acc[0].val1, acc[0].val2,
-                    acc[1].val1, acc[1].val2,
-                    acc[2].val1, acc[2].val2,
-                    gyr[0].val1, gyr[0].val2,
-                    gyr[1].val1, gyr[1].val2,
-                    gyr[2].val1, gyr[2].val2
-                );
-            } else {
-                printf("IMU read failed: rc=%d\n", rc);
-            }
-        }
-
-        /* Read six FSR402 channels through ADS7128 */
-        if (fsr_ready) {
-            int rc = fsr402_read_all(fsr_raw);
-
-            if (rc == 0) {
-                printf(
-                    "FSR,t_ms=%u,LH=%u,LB=%u,LT=%u,"
-                    "RH=%u,RB=%u,RT=%u\n",
-                    k_uptime_get_32(),
-                    fsr_raw[0], fsr_raw[1], fsr_raw[2],
-                    fsr_raw[3], fsr_raw[4], fsr_raw[5]
-                );
-            } else {
-                printf("FSR read failed: rc=%d\n", rc);
-            }
-        }
-    }
-
-    return 0;
+	/* The sensor threads keep running after main() returns. */
+	return 0;
 }

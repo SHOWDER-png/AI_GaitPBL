@@ -13,9 +13,9 @@ the IMU and plantar owners.
 
 | Item | UUID | Properties | Content |
 |---|---|---|---|
-| Gait service | _TBD (generate a random 128-bit UUID)_ | — | — |
-| IMU data | _TBD_ | Notify | IMU packet below |
-| Plantar data | _TBD_ | Notify | Plantar packet below |
+| Gait service | `e6d1e9d9-be0e-4889-b490-7643045692db` | — | — |
+| IMU data | `e6d1e9da-be0e-4889-b490-7643045692db` | Notify | IMU packet below |
+| Plantar data | `e6d1e9db-be0e-4889-b490-7643045692db` | Notify | Plantar packet below |
 | Control | _TBD_ | Write | start/stop streaming, set rates (later) |
 
 ## Packets (little-endian)
@@ -41,7 +41,7 @@ notifications drop packets (decide after testing in `experiments/ble_hello`).
 |---:|---|---|---|
 | 0 | uint16 | sequence number (wraps) | — |
 | 2 | uint32 | t_ms, Thingy uptime | ms |
-| 6 | int16 ×6 | raw ADC: L heel, L ball, L toe, R heel, R ball, R toe | ADS1115 counts |
+| 6 | int16 ×6 | raw ADC: L heel, L ball, L toe, R heel, R ball, R toe | ADS7128 counts, 0–4095 (12-bit) |
 
 18 bytes per sample.
 

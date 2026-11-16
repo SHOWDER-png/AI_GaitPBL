@@ -8,11 +8,6 @@ config GAIT_IMU
 	default y
 	select SENSOR
 
-config GAIT_IMU_RATE_HZ
-	int "IMU sample rate (Hz)"
-	default 100
-	depends on GAIT_IMU
-
 config GAIT_PLANTAR
 	bool "FSR 402 plantar pressure module via Adafruit ADS7128 (I2C)"
 	default n
@@ -20,11 +15,6 @@ config GAIT_PLANTAR
 	help
 	  Enable the six-channel FSR402 interface using the Adafruit ADS7128
 	  8-channel, 12-bit ADC over the dedicated external I2C bus.
-
-config GAIT_PLANTAR_RATE_HZ
-	int "Plantar sample rate (Hz)"
-	default 50
-	depends on GAIT_PLANTAR
 
 config GAIT_BLE
 	bool "BLE streaming to the i.MX95 (src/ble)"
