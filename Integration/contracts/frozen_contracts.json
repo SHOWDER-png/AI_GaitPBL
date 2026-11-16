@@ -1,0 +1,62 @@
+{
+  "contract_set_version": "draft-1",
+  "date": "2026-11-11",
+  "status": "DRAFT: proposed freeze, not yet signed off by the team (see Integration/INTERFACE_CONTRACTS.md)",
+  "interfaces": {
+    "lower_body_record": {
+      "schema_version": "lower-body-record.v1",
+      "producer": "Camera/tools/lower_body_records.py",
+      "format": "JSON Lines, one record per frame"
+    },
+    "gait_csv": {
+      "producer": "Camera/src/main.cpp",
+      "columns": ["ts_ms", "l_knee", "r_knee", "l_hip", "r_hip", "symmetry", "l_phase",
+                  "r_phase", "squat_phase", "l_compress", "r_compress", "infer_ms"]
+    },
+    "frames_csv": {
+      "producer": "Camera/src/camera_capture.cpp",
+      "columns": ["frame_index", "phase", "utc_timestamp", "elapsed_monotonic_ms", "width",
+                  "height", "read_ms", "estimated_drops_since_previous", "image_path"]
+    },
+    "fixture_manifest_csv": {
+      "producer": "Camera/fixtures/manifest.csv",
+      "columns": ["fixture_path", "phase", "source_run", "source_frame_index", "utc_timestamp",
+                  "elapsed_monotonic_ms", "width", "height", "source_image_path", "sha256"]
+    },
+    "imu_csv": {
+      "producer": "Nordic/firmware/experiments/imu_bmi270_c29/imu_config.yaml",
+      "columns": ["t_ms", "ax_mps2", "ay_mps2", "az_mps2", "gx_rads", "gy_rads", "gz_rads"],
+      "target_rate_hz": 100,
+      "accelerometer_range": "+/-2 g",
+      "gyroscope_range": "+/-500 dps"
+    }
+  },
+  "not_yet_defined": [
+    {"interface": "FSR pressure record and packet", "owner_task": "SCRUM-31"},
+    {"interface": "BLE transport mapping (Thingy:53 to FRDM-IMX95)", "owner_task": "SCRUM-31 / BLE task"},
+    {"interface": "Receiver accepted/rejected record store", "owner_task": "SCRUM-33"},
+    {"interface": "Analysis result schema and alert rules", "owner_task": "SCRUM-306"},
+    {"interface": "GUI / audio output messages", "owner_task": "SCRUM-256 epic"}
+  ],
+  "components": {
+    "macos_dev": {
+      "source": "Camera/results/scrum371-run-20261006/offline-inference-summary.json",
+      "onnx_runtime_version": "1.28.0",
+      "opencv_version": "5.0.0"
+    },
+    "frdm_imx95": {
+      "source": "Camera/board/FRDM_IMX95_BOARD_SETUP.md and Camera/results/scrum191-board-check-20261111/report.json",
+      "board": "NXP FRDM-IMX95",
+      "kernel": "6.18.2-1.0.0-gf49f45233f7b",
+      "libcamera": "v0.0.0+6489-lf-6.18.2-1.0.0",
+      "opencv_python": "4.12.0",
+      "gstreamer": "1.26.6"
+    },
+    "thingy53": {
+      "source": "Nordic/firmware/experiments/imu_bmi270_c29/imu_config.yaml",
+      "sdk": "nRF Connect SDK v3.3.4 (Zephyr 4.3.99)",
+      "imu_model": "Bosch BMI270"
+    },
+    "model": {"file": "Camera/models/yolov8n-pose.onnx", "bytes": 13447319}
+  }
+}
