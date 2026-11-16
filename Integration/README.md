@@ -5,7 +5,7 @@ Subtasks: SCRUM-348 (contracts), SCRUM-350 (fixtures and smoke tests), SCRUM-352
 
 | File | What it is |
 |---|---|
-| `INTERFACE_CONTRACTS.md` | Interfaces that exist today, gaps, component versions, sign-off table |
+| `INTERFACE_CONTRACTS.md` | Frozen interfaces (I1-I5), gaps outside the freeze (G1-G6), component versions |
 | `contracts/frozen_contracts.json` | Machine-readable snapshot of the contracts |
 | `TEST_SCENARIOS.md` | Smoke, functional, error and performance scenarios with status |
 | `tools/contract_validators.py` | Reference validators (reusable by the receiver) |

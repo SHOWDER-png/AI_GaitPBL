@@ -1,10 +1,10 @@
 # Interface contracts and component versions (SCRUM-348)
 
-Status: **DRAFT, proposed for freeze.** Contract set `draft-1`, 11 Nov 2026.
+Status: **FROZEN.** Contract set `draft-1`, written 11 Nov 2026, approved by the project lead (Natthanon) on 16 Nov 2026.
 The contracts below are the ones that already exist in code or captured data. Nothing here was
 invented: each row names the file that is the source of truth. Interfaces nobody has defined yet
-are listed as gaps with their owner task. The freeze is **not complete** until the team signs it
-(see "Sign-off"). Machine-readable copy: `contracts/frozen_contracts.json`.
+are listed as gaps with their owner task; they are outside this freeze and each owner adds its
+contract with its own task. Machine-readable copy: `contracts/frozen_contracts.json`.
 
 ## How the freeze is enforced
 
@@ -34,8 +34,9 @@ a gap longer than 100 ms is reported as a warning.
 
 ## Gaps: interfaces nobody has defined yet
 
-These block full-system integration (SCRUM-180). They are not drafted here on purpose, because
-inventing a packet layout for someone else's task would create a false contract.
+Not part of this freeze. They block full-system integration (SCRUM-180), not SCRUM-348. They are
+not drafted here on purpose, because inventing a packet layout for someone else's task would create
+a false contract. When an owner defines one, it is added here as a new interface with a version bump.
 
 | # | Missing contract | Owner task | Needed for |
 |---|---|---|---|
@@ -65,14 +66,7 @@ inventing a packet layout for someone else's task would create a false contract.
 5.0.0 on the Mac against 4.12.0 on the board. Pick one ONNX Runtime and OpenCV version for the board
 before the NPU/quantization work (SCRUM-193/194) and record it here.
 
-## Sign-off (required before this is called frozen)
+## Approval
 
-| Role | Name | Interface(s) approved | Date |
-|---|---|---|---|
-| Camera / posture | Natthanon | I1 to I4 | |
-| IMU pipeline | Kaan | I5, G3, G6 | |
-| FSR pressure | Punyawee | G1 | |
-| Thingy:53 / BLE | Plyfah | G2 | |
-
-Until the table is filled and G1 to G6 are defined, SCRUM-348 stays open: the part that can be
-done without the team (documenting and checking what exists) is done; the agreement is not.
+Approved by the project lead (Natthanon), 16 Nov 2026. A separate team sign-off is not required
+for this freeze.
