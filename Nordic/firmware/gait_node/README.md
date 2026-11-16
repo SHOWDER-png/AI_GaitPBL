@@ -1,4 +1,5 @@
-# gait_node - target structure and migration plan (for Claude Code)
+# gait_node - target structure and migration plan 
+
 
 Firmware for the **Nordic Thingy:53 (nRF5340)** sensor node of the AI Assist Gait system.
 It reads the BMI270 IMU and 6x FSR402 (via ADS7128 ADC) in separate threads and sends the
