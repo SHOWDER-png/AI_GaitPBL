@@ -5,6 +5,7 @@
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -14,6 +15,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#include "board_camera.h"
 
 namespace fs = std::filesystem;
 using Clock = std::chrono::steady_clock;
@@ -26,14 +29,37 @@ struct Options {
     int seconds_per_stage = 8;
     fs::path output;
     bool check_only = false;
+    bool board = false;          // FRDM-i.MX95 MIPI-CSI camera via libcamera (SCRUM-191)
+    std::string gst_pipeline;    // explicit GStreamer pipeline (overrides --board)
 };
+
+// Board-supported path: libcamera with the NXP NeoISP pipeline handler, NV12 out of the
+// ISP, converted to BGR for OpenCV. Direct V4L2 capture on the sensor node gives raw
+// Bayer and is not a valid integration path.
+// The camera only delivers 1920x1080 or 3840x2160, so capture 1080p and scale to the
+// requested size (see board_camera.h).
+std::string board_pipeline(const Options& o) {
+    board_camera::PipelineConfig config;
+    config.out_width = o.width;
+    config.out_height = o.height;
+    config.fps = o.fps;
+    return board_camera::build_pipeline(config);
+}
+
+std::string source_name(const Options& o) {
+    return o.gst_pipeline.empty() ? "device index " + std::to_string(o.device)
+                                  : "GStreamer pipeline";
+}
 
 void print_usage(const char* program) {
     std::cout << "Usage: " << program
-              << " --output DIR [--device INDEX] [--width PX] [--height PX]"
-                 " [--fps FPS] [--seconds N] [--check]\n"
+              << " --output DIR [--device INDEX | --board | --gst PIPELINE]"
+                 " [--width PX] [--height PX] [--fps FPS] [--seconds N] [--check]\n"
               << "Capture sequence: standing, walking, then no_person.\n"
-              << "--check opens the camera and reads one frame without saving.\n";
+              << "--check opens the camera and reads one frame without saving.\n"
+              << "--board uses the FRDM-i.MX95 MIPI-CSI camera through libcamera/NeoISP\n"
+              << "        (export LIBCAMERA_PIPELINES_MATCH_LIST=nxp/neo first).\n"
+              << "--gst   uses the given GStreamer pipeline (must end in appsink).\n";
 }
 
 bool parse_positive_int(const std::string& value, int& result) {
@@ -59,6 +85,10 @@ bool parse_options(int argc, char* argv[], Options& options) {
             options.check_only = true;
             continue;
         }
+        if (argument == "--board") {
+            options.board = true;
+            continue;
+        }
         if (i + 1 >= argc) {
             std::cerr << "Missing value for " << argument << "\n";
             return false;
@@ -72,6 +102,8 @@ bool parse_options(int argc, char* argv[], Options& options) {
                 return false;
             }
             if (value == "0") options.device = 0;
+        } else if (argument == "--gst") {
+            options.gst_pipeline = value;
         } else if (argument == "--width") {
             if (!parse_positive_int(value, options.width)) return false;
         } else if (argument == "--height") {
@@ -84,6 +116,9 @@ bool parse_options(int argc, char* argv[], Options& options) {
             std::cerr << "Unknown option: " << argument << "\n";
             return false;
         }
+    }
+    if (options.board && options.gst_pipeline.empty()) {
+        options.gst_pipeline = board_pipeline(options);
     }
     if (!options.check_only && options.output.empty()) {
         std::cerr << "--output DIR is required unless --check is used.\n";
@@ -107,7 +142,9 @@ std::string utc_timestamp() {
 
 void report_camera(const cv::VideoCapture& camera, const cv::Mat& frame,
                    const Options& options) {
-    std::cout << "Camera opened (device index " << options.device << ")\n"
+    std::cout << "Camera opened (" << source_name(options) << ")\n";
+    if (!options.gst_pipeline.empty()) std::cout << "Pipeline: " << options.gst_pipeline << "\n";
+    std::cout
               << "Requested: " << options.width << 'x' << options.height
               << " @ " << options.fps << " fps\n"
               << "Reported:  " << camera.get(cv::CAP_PROP_FRAME_WIDTH) << 'x'
@@ -220,15 +257,34 @@ int main(int argc, char* argv[]) {
     Options options;
     if (!parse_options(argc, argv, options)) return 2;
 
-    cv::VideoCapture camera(options.device, cv::CAP_ANY);
-    if (!camera.isOpened()) {
-        std::cerr << "ERROR: Could not open camera device index " << options.device
-                  << ". Check the connection, device index, and OS camera permission.\n";
+    cv::VideoCapture camera;
+    if (options.board && std::system("gst-inspect-1.0 libcamerasrc >/dev/null 2>&1") != 0) {
+        // Without this check OpenCV can block forever on a pipeline with a missing element.
+        std::cerr << "ERROR: GStreamer element 'libcamerasrc' not found. Install the "
+                     "libcamera GStreamer plugin on the board, then check `cam -l`.\n";
         return 1;
     }
-    camera.set(cv::CAP_PROP_FRAME_WIDTH, options.width);
-    camera.set(cv::CAP_PROP_FRAME_HEIGHT, options.height);
-    camera.set(cv::CAP_PROP_FPS, options.fps);
+    if (!options.gst_pipeline.empty()) {
+        camera.open(options.gst_pipeline, cv::CAP_GSTREAMER);
+        if (!camera.isOpened()) {
+            std::cerr << "ERROR: Could not open GStreamer pipeline:\n  "
+                      << options.gst_pipeline << "\n"
+                      << "Check: OpenCV built with GStreamer, libcamerasrc installed, "
+                         "LIBCAMERA_PIPELINES_MATCH_LIST=nxp/neo exported, and `cam -l` "
+                         "lists the camera.\n";
+            return 1;
+        }
+    } else {
+        camera.open(options.device, cv::CAP_ANY);
+        if (!camera.isOpened()) {
+            std::cerr << "ERROR: Could not open camera device index " << options.device
+                      << ". Check the connection, device index, and OS camera permission.\n";
+            return 1;
+        }
+        camera.set(cv::CAP_PROP_FRAME_WIDTH, options.width);
+        camera.set(cv::CAP_PROP_FRAME_HEIGHT, options.height);
+        camera.set(cv::CAP_PROP_FPS, options.fps);
+    }
 
     cv::Mat initial_frame;
     if (!camera.read(initial_frame) || initial_frame.empty()) {
@@ -236,7 +292,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     report_camera(camera, initial_frame, options);
-    if (options.check_only) return 0;
+    if (options.check_only) {
+        camera.release();
+        std::cout << "Camera released cleanly.\n";
+        return 0;
+    }
 
     if (fs::exists(options.output)) {
         std::cerr << "ERROR: Output path already exists; refusing to overwrite originals: "
@@ -288,6 +348,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    camera.release();
+    std::cout << "Camera released cleanly.\n";
     std::cout << "Capture complete: " << total_frames << " frames; "
               << total_estimated_drops << " estimated dropped frames.\n"
               << "Original PNG frames and frames.csv: " << options.output << "\n";

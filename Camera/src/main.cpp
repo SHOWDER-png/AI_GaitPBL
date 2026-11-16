@@ -14,6 +14,7 @@
 #include "angle_calc.h"
 #include "offline_inference.h"
 #include "offline_validation.h"
+#include "board_camera.h"
 
 volatile sig_atomic_t g_running = 1;
 void signal_handler(int) { g_running = 0; }
@@ -405,10 +406,9 @@ int main(int argc, char* argv[]) {
     // Requires LIBCAMERA_PIPELINES_MATCH_LIST=nxp/neo to be set in the
     // environment (see deployment guide) so libcamera selects the
     // ISP-capable pipeline handler instead of the raw imx8-isi handler.
-    std::string pipeline =
-        "libcamerasrc ! video/x-raw,format=NV12,width=1280,height=720,"
-        "framerate=30/1 ! videoconvert ! video/x-raw,format=BGR ! "
-        "appsink drop=true max-buffers=1 sync=false";
+    // The camera only delivers 1920x1080 or 3840x2160: capture 1080p, scale to 1280x720.
+    const std::string pipeline =
+        board_camera::build_pipeline(board_camera::PipelineConfig{});
     cv::VideoCapture cap(pipeline, cv::CAP_GSTREAMER);
 #else
     int cam_index = (argc > 1) ? std::stoi(argv[1]) : 0;
