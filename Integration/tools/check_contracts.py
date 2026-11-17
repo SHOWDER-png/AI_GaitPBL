@@ -75,6 +75,15 @@ def main() -> int:
     compare("lower_body schema_version (validator)", cv.LOWER_BODY_SCHEMA,
             ifaces["lower_body_record"]["schema_version"])
 
+    exporter = (ROOT / "Camera/tools/export_ml_dataset.py").read_text(encoding="utf-8")
+    match = re.search(r'^SCHEMA_VERSION\s*=\s*"([^"]+)"', exporter, re.MULTILINE)
+    compare("camera ML export schema_version", match.group(1) if match else None,
+            ifaces["camera_gait_ml_csv"]["schema_version"])
+    block = re.search(r"^ML_COLUMNS[^=]*=\s*\[(.*?)^\]", exporter, re.MULTILINE | re.DOTALL)
+    compare("camera ML export columns",
+            re.findall(r'\("(\w+)", "\w+"\)', block.group(1)) if block else None,
+            ifaces["camera_gait_ml_csv"]["columns"])
+
     imu = (ROOT / "Nordic/firmware/experiments/imu_bmi270_c29/imu_config.yaml").read_text(encoding="utf-8")
     columns = re.search(r'^csv_columns:\s*"([^"]+)"', imu, re.MULTILINE)
     compare("imu_csv columns (imu_config.yaml)",

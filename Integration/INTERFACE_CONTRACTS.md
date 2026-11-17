@@ -1,6 +1,6 @@
 # Interface contracts and component versions (SCRUM-348)
 
-Status: **FROZEN.** Contract set `draft-1`, written 11 Nov 2026, approved by the project lead (Natthanon) on 16 Nov 2026.
+Status: **FROZEN.** Contract set `draft-2`. `draft-1` (I1-I5) was written 11 Nov 2026 and approved by the project lead (Natthanon) on 16 Nov 2026; `draft-2` (17 Nov 2026) adds I6 by its owner and leaves I1-I5 unchanged.
 The contracts below are the ones that already exist in code or captured data. Nothing here was
 invented: each row names the file that is the source of truth. Interfaces nobody has defined yet
 are listed as gaps with their owner task; they are outside this freeze and each owner adds its
@@ -23,6 +23,7 @@ the same change, and get the consumer's owner to approve.
 | I3 | Lower-body record | camera pipeline to receiver / analysis | JSON Lines, `schema_version = lower-body-record.v1` | `source.elapsed_monotonic_ms`, `source.timestamp_utc` | `Camera/tools/lower_body_records.py` | Natthanon |
 | I4 | Gait metrics log | `posture_detection` to analysis | CSV `gait_data.csv`, 12 columns, unversioned; `-1` = not visible | `ts_ms` since program start | `Camera/src/main.cpp` | Natthanon |
 | I5 | IMU stream export | Thingy:53 (BMI270) to host | CSV, 7 columns; m/s^2 and rad/s; target 100 Hz; accel +/-2 g, gyro +/-500 dps | `t_ms` (see gap G6) | `Nordic/firmware/experiments/imu_bmi270_c29/imu_config.yaml` | Kaan |
+| I6 | Camera ML training export | `export_ml_dataset.py` to Phase 3 training | CSV, 20 columns, `schema_version = camera-gait-ml.v1` in the `.meta.json` sidecar; empty cell = not measured | `t_ms` = I4 `ts_ms`, per session | `Camera/tools/export_ml_dataset.py`, `Camera/ML_EXPORT.md` | Natthanon |
 
 Column lists are in `frozen_contracts.json`. Rules enforced by the reference validators
 (`tools/contract_validators.py`): I3 has exactly six points in a fixed order, status in

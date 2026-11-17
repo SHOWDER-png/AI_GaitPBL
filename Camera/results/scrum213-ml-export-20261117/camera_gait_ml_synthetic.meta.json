@@ -1,0 +1,133 @@
+{
+  "schema_version": "camera-gait-ml.v1",
+  "generated_at_utc": "2026-11-17T13:47:50+00:00",
+  "columns": [
+    {
+      "name": "session_id",
+      "type": "str"
+    },
+    {
+      "name": "sample_index",
+      "type": "int"
+    },
+    {
+      "name": "t_ms",
+      "type": "float"
+    },
+    {
+      "name": "dt_ms",
+      "type": "float"
+    },
+    {
+      "name": "l_knee_deg",
+      "type": "float"
+    },
+    {
+      "name": "r_knee_deg",
+      "type": "float"
+    },
+    {
+      "name": "l_hip_deg",
+      "type": "float"
+    },
+    {
+      "name": "r_hip_deg",
+      "type": "float"
+    },
+    {
+      "name": "symmetry_pct",
+      "type": "float"
+    },
+    {
+      "name": "l_compress",
+      "type": "float"
+    },
+    {
+      "name": "r_compress",
+      "type": "float"
+    },
+    {
+      "name": "l_knee_valid",
+      "type": "int01"
+    },
+    {
+      "name": "r_knee_valid",
+      "type": "int01"
+    },
+    {
+      "name": "l_hip_valid",
+      "type": "int01"
+    },
+    {
+      "name": "r_hip_valid",
+      "type": "int01"
+    },
+    {
+      "name": "symmetry_valid",
+      "type": "int01"
+    },
+    {
+      "name": "squat_phase",
+      "type": "category"
+    },
+    {
+      "name": "squat_phase_id",
+      "type": "int"
+    },
+    {
+      "name": "infer_ms",
+      "type": "float"
+    },
+    {
+      "name": "label",
+      "type": "str"
+    }
+  ],
+  "missing_value": "empty cell; see the matching *_valid column",
+  "squat_phase_ids": {
+    "STANDING": 0,
+    "SEMI_SQUAT": 1,
+    "DEEP_SQUAT": 2
+  },
+  "time_base": "t_ms = ts_ms from posture_detection: ms since program start, per session",
+  "rules": {
+    "min_rate_hz": 5.0,
+    "gap_factor": 3.0,
+    "min_samples": 10
+  },
+  "rows": 70,
+  "sessions": [
+    {
+      "session_id": "synthetic/gait_valid",
+      "source": "Integration/fixtures/synthetic/gait_valid.csv",
+      "source_sha256": "457859e13f34069d8849b1c3b94deb4aaeb30823fb3e9f6e54511648bf356937",
+      "warnings": [],
+      "sampling": {
+        "samples": 60,
+        "duration_ms": 1964.7,
+        "median_interval_ms": 33.3,
+        "rate_hz": 30.03,
+        "jitter_ms": 0.0,
+        "gaps": 0,
+        "longest_gap_ms": null,
+        "duplicate_timestamps": 0
+      }
+    },
+    {
+      "session_id": "synthetic/gait_not_visible",
+      "source": "Integration/fixtures/synthetic/gait_not_visible.csv",
+      "source_sha256": "faa83a9de72f5bcf6bba497af13dcd7705eaeb4b5c871b6e697380badb2a3717",
+      "warnings": [],
+      "sampling": {
+        "samples": 10,
+        "duration_ms": 299.7,
+        "median_interval_ms": 33.3,
+        "rate_hz": 30.03,
+        "jitter_ms": 0.0,
+        "gaps": 0,
+        "longest_gap_ms": null,
+        "duplicate_timestamps": 0
+      }
+    }
+  ]
+}
