@@ -7,3 +7,13 @@ occlusion_fallback_tests: all 10 groups passed
 exit=0
 
 Mutation check: 7 injected bugs (no hold limit, symmetry dropped, PARTIAL never chosen, hold kept after bad clock, IMU flag off, apply keeps symmetry, clock check off) -> each made the tests fail.
+
+$ cd Camera && ./build/occlusion_replay   (real yolov8n-pose.onnx, 13,447,319 bytes; ONNX Runtime 1.19.0 linux-x64; OpenCV 4.6.0)
+[PoseDetector] Loaded: models/yolov8n-pose.onnx
+fixture,original,shins_hidden_100ms,shins_hidden_400ms,one_leg_hidden_conf(knee/ankle),one_leg_knee_shift_px
+standing/standing_frame_94.png,FULL,PARTIAL LHELD RHELD,CAMERA_DEGRADED,1.00/0.99,4
+walking/walking_far_frame_251.png,FULL,PARTIAL LHELD RHELD,CAMERA_DEGRADED,0.99/0.96,14
+walking/walking_mid_frame_298.png,FULL,PARTIAL LHELD RHELD,CAMERA_DEGRADED,1.00/0.99,11
+walking/walking_near_frame_346.png,FULL,PARTIAL LHELD RHELD,CAMERA_DEGRADED,0.99/0.98,32
+OCCLUSION REPLAY PASS (4 person fixtures)
+exit=0

@@ -126,6 +126,28 @@ if(BUILD_TESTING)
     endif()
     add_test(NAME occlusion_fallback_tests COMMAND occlusion_fallback_tests)
 
+    # Real-model occlusion replay over the fixtures (needs models/yolov8n-pose.onnx); run from Camera/.
+    add_executable(occlusion_replay
+        tests/occlusion_replay.cpp
+        src/pose_detector.cpp
+        src/angle_calc.cpp
+    )
+    target_include_directories(occlusion_replay PRIVATE
+        src
+        ${OpenCV_INCLUDE_DIRS}
+        ${ONNXRUNTIME_ROOT}/include/onnxruntime
+        ${ONNXRUNTIME_ROOT}/include
+    )
+    target_link_libraries(occlusion_replay PRIVATE ${OpenCV_LIBS})
+    if(APPLE)
+        target_link_libraries(occlusion_replay PRIVATE ${ONNXRUNTIME_ROOT}/lib/libonnxruntime.dylib)
+    else()
+        target_link_libraries(occlusion_replay PRIVATE ${ONNXRUNTIME_ROOT}/lib/libonnxruntime.so)
+    endif()
+    add_test(NAME occlusion_replay
+        COMMAND occlusion_replay
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
     add_executable(board_camera_tests tests/board_camera_tests.cpp)
     target_include_directories(board_camera_tests PRIVATE src)
     add_test(NAME board_camera_tests COMMAND board_camera_tests)
