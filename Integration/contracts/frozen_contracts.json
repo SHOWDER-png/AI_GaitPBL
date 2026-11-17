@@ -1,5 +1,5 @@
 {
-  "contract_set_version": "draft-1",
+  "contract_set_version": "draft-2",
   "date": "2026-11-11",
   "status": "DRAFT: proposed freeze, not yet signed off by the team (see Integration/INTERFACE_CONTRACTS.md)",
   "interfaces": {
@@ -29,6 +29,14 @@
       "target_rate_hz": 100,
       "accelerometer_range": "+/-2 g",
       "gyroscope_range": "+/-500 dps"
+    },
+    "camera_gait_ml_csv": {
+      "producer": "Camera/tools/export_ml_dataset.py",
+      "schema_version": "camera-gait-ml.v1",
+      "columns": ["session_id", "sample_index", "t_ms", "dt_ms", "l_knee_deg", "r_knee_deg",
+                  "l_hip_deg", "r_hip_deg", "symmetry_pct", "l_compress", "r_compress",
+                  "l_knee_valid", "r_knee_valid", "l_hip_valid", "r_hip_valid", "symmetry_valid",
+                  "squat_phase", "squat_phase_id", "infer_ms", "label"]
     }
   },
   "not_yet_defined": [

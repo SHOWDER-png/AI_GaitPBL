@@ -1,0 +1,35 @@
+$ python3 -B Camera/tools/export_ml_dataset.py Camera/gait_data.csv --output Camera/results/scrum213-ml-export-20261117/real.csv
+REJECTED: Camera/gait_data.csv: file is empty (no header) - was the session saved with Q?
+exit=1
+
+$ python3 -B Camera/tools/export_ml_dataset.py Integration/fixtures/synthetic/gait_valid.csv Integration/fixtures/synthetic/gait_not_visible.csv --output Camera/results/scrum213-ml-export-20261117/camera_gait_ml_synthetic.csv
+OK synthetic/gait_valid: 60 samples, 30.03 Hz (jitter 0.0 ms, gaps 0)
+OK synthetic/gait_not_visible: 10 samples, 30.03 Hz (jitter 0.0 ms, gaps 0)
+Exported 70 rows -> Camera/results/scrum213-ml-export-20261117/camera_gait_ml_synthetic.csv (+ camera_gait_ml_synthetic.meta.json)
+exit=0
+
+$ python3 -B Camera/tools/export_ml_dataset.py Integration/fixtures/synthetic/gait_time_backwards.csv --output Camera/results/scrum213-ml-export-20261117/rejected.csv
+REJECTED: Integration/fixtures/synthetic/gait_time_backwards.csv: contract I4 violated: line 8: ts_ms goes backwards; line 11: r_knee must be -1 or 0..180 degrees
+exit=1
+
+$ python3 -B -m unittest Camera/tests/test_export_ml_dataset.py -v
+test_contract_violations_rejected (Camera.tests.test_export_ml_dataset.ExportTests.test_contract_violations_rejected) ... ok
+test_duplicate_timestamps_rejected (Camera.tests.test_export_ml_dataset.ExportTests.test_duplicate_timestamps_rejected) ... ok
+test_empty_file_rejected (Camera.tests.test_export_ml_dataset.ExportTests.test_empty_file_rejected) ... ok
+test_gap_is_a_warning_not_a_rejection (Camera.tests.test_export_ml_dataset.ExportTests.test_gap_is_a_warning_not_a_rejection) ... ok
+test_label_with_comma_is_usage_error (Camera.tests.test_export_ml_dataset.ExportTests.test_label_with_comma_is_usage_error) ... ok
+test_low_sampling_rate_rejected (Camera.tests.test_export_ml_dataset.ExportTests.test_low_sampling_rate_rejected) ... ok
+test_missing_file_rejected (Camera.tests.test_export_ml_dataset.ExportTests.test_missing_file_rejected) ... ok
+test_non_numeric_rejected (Camera.tests.test_export_ml_dataset.ExportTests.test_non_numeric_rejected) ... ok
+test_not_visible_becomes_empty_with_valid_flag_zero (Camera.tests.test_export_ml_dataset.ExportTests.test_not_visible_becomes_empty_with_valid_flag_zero) ... ok
+test_phase_ids_and_label (Camera.tests.test_export_ml_dataset.ExportTests.test_phase_ids_and_label) ... ok
+test_same_session_twice_rejected (Camera.tests.test_export_ml_dataset.ExportTests.test_same_session_twice_rejected) ... ok
+test_too_few_samples_rejected (Camera.tests.test_export_ml_dataset.ExportTests.test_too_few_samples_rejected) ... ok
+test_two_sessions_are_concatenated_with_own_ids (Camera.tests.test_export_ml_dataset.ExportTests.test_two_sessions_are_concatenated_with_own_ids) ... ok
+test_valid_synthetic_session_exports (Camera.tests.test_export_ml_dataset.ExportTests.test_valid_synthetic_session_exports) ... ok
+test_validator_catches_flag_mismatch_and_time (Camera.tests.test_export_ml_dataset.ExportTests.test_validator_catches_flag_mismatch_and_time) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.020s
+
+OK
