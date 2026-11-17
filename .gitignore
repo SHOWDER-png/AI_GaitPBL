@@ -22,3 +22,6 @@ Camera/captures/
 
 # Recorded Nordic sensor data is kept on purpose
 !Nordic/**/data/*.csv
+
+# Downloaded ONNX Runtime (Camera/scripts/fetch_onnxruntime.sh)
+Camera/third_party/
