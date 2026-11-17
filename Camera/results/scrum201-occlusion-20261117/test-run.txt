@@ -1,0 +1,9 @@
+$ cmake -S Camera -B build -DONNXRUNTIME_ROOT=<onnxruntime 1.19.0 linux-x64> && cmake --build build --target occlusion_fallback_tests posture_detection
+Platform: Ubuntu 24.04 x86_64, g++ 13.3, OpenCV 4.6.0, ONNX Runtime 1.19.0 (cloud build, not the Mac)
+posture_detection: built OK with the fallback wired in
+
+$ ./build/occlusion_fallback_tests
+occlusion_fallback_tests: all 10 groups passed
+exit=0
+
+Mutation check: 7 injected bugs (no hold limit, symmetry dropped, PARTIAL never chosen, hold kept after bad clock, IMU flag off, apply keeps symmetry, clock check off) -> each made the tests fail.

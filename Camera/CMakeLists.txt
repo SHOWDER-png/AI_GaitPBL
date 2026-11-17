@@ -108,6 +108,24 @@ if(BUILD_TESTING)
         COMMAND frame_quality_replay
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
+    # SCRUM-201: links ONNX Runtime only because pose_detector.h pulls in its C++ API header.
+    add_executable(occlusion_fallback_tests
+        tests/occlusion_fallback_tests.cpp
+        src/angle_calc.cpp
+    )
+    target_include_directories(occlusion_fallback_tests PRIVATE
+        src
+        ${OpenCV_INCLUDE_DIRS}
+        ${ONNXRUNTIME_ROOT}/include/onnxruntime
+        ${ONNXRUNTIME_ROOT}/include
+    )
+    if(APPLE)
+        target_link_libraries(occlusion_fallback_tests PRIVATE ${ONNXRUNTIME_ROOT}/lib/libonnxruntime.dylib)
+    else()
+        target_link_libraries(occlusion_fallback_tests PRIVATE ${ONNXRUNTIME_ROOT}/lib/libonnxruntime.so)
+    endif()
+    add_test(NAME occlusion_fallback_tests COMMAND occlusion_fallback_tests)
+
     add_executable(board_camera_tests tests/board_camera_tests.cpp)
     target_include_directories(board_camera_tests PRIVATE src)
     add_test(NAME board_camera_tests COMMAND board_camera_tests)
