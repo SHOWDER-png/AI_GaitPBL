@@ -1,0 +1,85 @@
+SCRUM-176 verification, 17 Nov 2026. Host: Ubuntu 24.04 x86_64 (cloud), no board.
+
+## 1. Linux x86_64 build + ctest (ONNX Runtime 1.19.0 x64 in third_party/, OpenCV 4.6.0)
+-- Platform: Linux x86_64
+-- ONNX Runtime: /home/claude/ai_gaitpbl/Camera/third_party/onnxruntime-linux-x64-1.19.0
+[ 45%] Built target board_camera_tests
+[ 55%] Built target camera_capture
+[ 85%] Built target offline_validation_tests
+[ 85%] Built target frame_quality_tests
+[ 90%] Built target occlusion_fallback_tests
+[ 95%] Built target frame_quality_replay
+[100%] Built target posture_detection
+1/5 Test #1: offline_validation_tests .........   Passed    0.00 sec
+2/5 Test #2: frame_quality_tests ..............   Passed    0.00 sec
+3/5 Test #3: frame_quality_replay .............   Passed    0.51 sec
+4/5 Test #4: occlusion_fallback_tests .........   Passed    0.00 sec
+5/5 Test #5: board_camera_tests ...............   Passed    0.00 sec
+100% tests passed, 0 tests failed out of 5
+
+## 2. aarch64 compile of every C++ file, unchanged (aarch64-linux-gnu-g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0)
+  OK   src/main.cpp
+  OK   src/pose_detector.cpp
+  OK   src/angle_calc.cpp
+  OK   src/offline_inference.cpp
+  OK   src/camera_capture.cpp
+  OK   tests/board_camera_tests.cpp
+  OK   tests/frame_quality_replay.cpp
+  OK   tests/frame_quality_tests.cpp
+  OK   tests/occlusion_fallback_tests.cpp
+  OK   tests/offline_validation_tests.cpp
+
+## 3. aarch64 test binaries linked with ONNX Runtime 1.19.0 aarch64, run in qemu-aarch64
+/tmp/a64/frame_quality_tests: ELF 64-bit LSB pie executable, ARM aarch64, version 1 (GNU/Linux), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1
+  $ qemu-aarch64 frame_quality_tests: frame_quality_tests: all passed (exit 0)
+  $ qemu-aarch64 occlusion_fallback_tests: occlusion_fallback_tests: all 10 groups passed (exit 0)
+  $ qemu-aarch64 board_camera_tests: board_camera_tests: all passed (exit 0)
+
+## 4. Toolchain file through CMake, no OpenCV sysroot
+  -- The CXX compiler identification is GNU 13.3.0
+  -- Check for working CXX compiler: /usr/bin/aarch64-linux-gnu-g++ - skipped
+  -- Platform: Linux aarch64
+  -- Cross-compiling for aarch64, sysroot: 
+  CMake Error at CMakeLists.txt:20 (find_package):
+    By not providing "FindOpenCV.cmake" in CMAKE_MODULE_PATH this project has
+
+## 5. deploy.sh
+  Note: posture_detection cannot be linked for aarch64 without an OpenCV sysroot (item 4), so the
+  aarch64 binary used here is a stand-in (occlusion_fallback_tests renamed), linked like the app
+  against libonnxruntime.so.1 with RPATH $ORIGIN/lib only.
+  $ deploy.sh root@192.0.2.10 --build <aarch64 build> --dry-run
+  Deploying to root@192.0.2.10:/root/gait
+  DRY-RUN: ssh root@192.0.2.10 mkdir\ -p\ \'/root/gait/lib\'\ \'/root/gait/models\'
+  DRY-RUN: scp /tmp/deploytest/build/posture_detection root@192.0.2.10:/root/gait/
+  DRY-RUN: scp /home/claude/ai_gaitpbl/Camera/third_party/onnxruntime-linux-aarch64-1.19.0/lib/libonnxruntime.so.1.19.0 root@192.0.2.10:/root/gait/lib/libonnxruntime.so.1
+  DRY-RUN: scp /home/claude/ai_gaitpbl/Camera/models/yolov8n-pose.onnx root@192.0.2.10:/root/gait/models/yolov8n-pose.onnx
+  DRY-RUN: scp <run_posture.sh> root@192.0.2.10:/root/gait/run_posture.sh
+  DRY-RUN: ssh root@192.0.2.10 chmod\ +x\ \'/root/gait/run_posture.sh\'\ \'/root/gait/posture_detection\'\ \&\&\ cd\ \'/root/gait\'\ \&\&\ ./posture_detection\ --help\ \>/dev/null\ \&\&\ echo\ \'Board\ check:\ posture_detection\ starts\ and\ finds\ libonnxruntime\'
+  Done. On the board: /root/gait/run_posture.sh
+  $ deploy.sh with an x86_64 binary:
+    ERROR: /tmp/deploytest/x86b/posture_detection is not an aarch64 ELF file; build with cmake/aarch64.cmake
+  $ deploy.sh with --dest 'gait':
+    ERROR: --dest must be an absolute path on the board
+  $ full run through ssh/scp stand-ins that copy into a local folder and start the binary with qemu:
+    [ssh root@192.0.2.10] chmod +x '/tmp/deploytest/board/root/gait/run_posture.sh' '/tmp/deploytest/board/root/gait/posture_detection' && cd '/tmp/deploytest/board/root/gait' && qemu-aarch64 -L /usr/aarch64-linux-gnu ./posture_detection; echo RUN_EXIT=$? >/dev/null && echo 'Board check: posture_detection starts and finds libonnxruntime'
+    Board check: posture_detection starts and finds libonnxruntime
+    Done. On the board: /root/gait/run_posture.sh
+    deployed files:
+      /root/gait/lib/libonnxruntime.so.1
+      /root/gait/models/yolov8n-pose.onnx
+      /root/gait/posture_detection
+      /root/gait/run_posture.sh
+  negative control, lib/ removed:
+    ./posture_detection: error while loading shared libraries: libonnxruntime.so.1: cannot open shared object file: No such file or directory
+
+## 6. shellcheck version: 0.9.0
+  clean
+
+## 7. fetch_onnxruntime.sh pins (sha256 of the downloaded release archives)
+5e1c92c63086564997e1a99f4e4ca7fad023cc34995d092f90d9cf5131629a00    onnxruntime-linux-aarch64-1.19.0.tgz
+8627cae49b51544ed15bb70c8ecf25b187f22a301c99c1ced5f4f3af5c36b44c    onnxruntime-linux-x64-1.19.0.tgz
+
+## 8. Re-run after rebasing onto SCRUM-201 (adds tests/occlusion_replay.cpp)
+  x86_64: 8 targets built; ctest 6/6 passed (offline_validation_tests, frame_quality_tests,
+  frame_quality_replay, occlusion_fallback_tests, occlusion_replay, board_camera_tests).
+  aarch64: tests/occlusion_replay.cpp compiles unchanged (11/11 C++ files).
