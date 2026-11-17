@@ -16,6 +16,7 @@
 #include "offline_validation.h"
 #include "board_camera.h"
 #include "frame_quality.h"
+#include "occlusion_fallback.h"
 
 volatile sig_atomic_t g_running = 1;
 void signal_handler(int) { g_running = 0; }
@@ -468,6 +469,12 @@ int main(int argc, char* argv[]) {
     frame_quality::Tracker quality_tracker(quality_config);
     frame_quality::Status last_quality = frame_quality::Status::OK;
     long long quality_counts[5] = {0, 0, 0, 0, 0};
+    // Occlusion fallback (SCRUM-201): keeps a hidden leg's last values for up to 300 ms and
+    // flags CAMERA_DEGRADED (switch to IMU) when neither leg can be measured. Display only:
+    // the CSV below still logs only frames that passed the quality gate.
+    occlusion::Tracker occlusion_tracker;
+    occlusion::Mode last_mode = occlusion::Mode::CAMERA_DEGRADED;
+    long long mode_counts[3] = {0, 0, 0};
     auto ms_since_start = [&t0]() {
         return std::chrono::duration<double, std::milli>(
                    std::chrono::steady_clock::now() - t0).count();
@@ -526,6 +533,79 @@ int main(int argc, char* argv[]) {
             {frame.cols-160, 25},
             cv::FONT_HERSHEY_SIMPLEX, 0.6, {0,255,0}, 2);
 
+        // Overlay for one frame's gait values (live, or with held legs from the fallback).
+        auto draw_metrics = [&](const GaitResult& shown, const std::vector<Landmark>& lm,
+                                const occlusion::Result& occ) {
+                // Draw keypoints
+                for (int id : {11,12,13,14,15,16})
+                    if (lm[id].score > 0.3f)
+                        cv::circle(frame,
+                            {(int)lm[id].x, (int)lm[id].y},
+                            7, {0,255,0}, -1);
+
+                // Virtual hip indicator
+                if (shown.l_hip_virtual || shown.r_hip_virtual) {
+                    cv::putText(frame, "HIP: virtual fallback active",
+                        {20, frame.rows-70},
+                        cv::FONT_HERSHEY_SIMPLEX, 0.55, {255,165,0}, 1);
+                }
+
+                // Draw skeleton
+                auto line = [&](int a, int b) {
+                    if (lm[a].score > 0.3f && lm[b].score > 0.3f)
+                        cv::line(frame,
+                            {(int)lm[a].x, (int)lm[a].y},
+                            {(int)lm[b].x, (int)lm[b].y},
+                            {0,200,255}, 2);
+                };
+                line(11,12); line(11,13); line(13,15);
+                line(12,14); line(14,16);
+
+                // Overlay metrics
+                auto txt = [&](const std::string& s, int y,
+                               cv::Scalar c = {0,255,0}) {
+                    cv::putText(frame, s, {20,y},
+                        cv::FONT_HERSHEY_SIMPLEX, 0.7, c, 2);
+                };
+                txt("L Knee: " + (shown.l_knee_angle >= 0
+                    ? std::to_string((int)shown.l_knee_angle)+" deg"
+                    : "N/A"), 40);
+                txt("R Knee: " + (shown.r_knee_angle >= 0
+                    ? std::to_string((int)shown.r_knee_angle)+" deg"
+                    : "N/A"), 70);
+                txt("Phase: " + shown.squat_phase, 100,
+                    shown.squat_phase == "STANDING"   ? cv::Scalar{0,255,0}   :
+                    shown.squat_phase == "SEMI_SQUAT" ? cv::Scalar{0,200,255} :
+                                                            cv::Scalar{0,100,255});
+                txt("L compress: "
+                    + std::to_string((int)(shown.l_leg_compression*100))+"%", 130);
+                txt("R compress: "
+                    + std::to_string((int)(shown.r_leg_compression*100))+"%", 160);
+                txt("Symmetry: " + (shown.symmetry_index >= 0
+                    ? std::to_string((int)shown.symmetry_index)+"%"
+                    : "N/A"), 190,
+                    shown.symmetry_index < 10.f
+                        ? cv::Scalar{0,255,0} : cv::Scalar{0,100,255});
+                txt("Infer: "+std::to_string((int)inf_ms)+" ms", 220, {180,180,180});
+
+                if (lm[11].score < 0.5f || lm[12].score < 0.5f)
+                    cv::putText(frame, "WARNING: Hip not visible",
+                        {20, frame.rows-50},
+                        cv::FONT_HERSHEY_SIMPLEX, 0.65, {0,0,255}, 2);
+                for (const auto* leg : {&occ.left, &occ.right}) {
+                    if (leg->state == occlusion::LegState::VISIBLE) continue;
+                    const bool is_left = leg == &occ.left;
+                    cv::putText(frame,
+                        std::string(is_left ? "L" : "R") + " leg "
+                            + (leg->state == occlusion::LegState::HELD
+                                   ? "HELD " + std::to_string((int)leg->hidden_for_ms) + " ms"
+                                   : std::string("OCCLUDED"))
+                            + ": " + leg->reason,
+                        {20, is_left ? 250 : 275},
+                        cv::FONT_HERSHEY_SIMPLEX, 0.55, {0,165,255}, 1);
+                }
+        };
+
         const auto quality = quality_tracker.assess(
             dets.empty() ? nullptr : &dets[0], capture_ms, ms_since_start());
         ++quality_counts[static_cast<int>(quality.status)];
@@ -537,6 +617,7 @@ int main(int argc, char* argv[]) {
             last_quality = quality.status;
         }
 
+        occlusion::Result occ;
         if (quality.usable()) {
             auto& lm = dets[0].kpts;
             current_g = compute_gait(lm);
@@ -565,66 +646,30 @@ int main(int argc, char* argv[]) {
                     cv::FONT_HERSHEY_SIMPLEX, 0.55, {0,255,100}, 1);
             }
 
-            // Draw keypoints
-            for (int id : {11,12,13,14,15,16})
-                if (lm[id].score > 0.3f)
-                    cv::circle(frame,
-                        {(int)lm[id].x, (int)lm[id].y},
-                        7, {0,255,0}, -1);
-
-            // Virtual hip indicator
-            if (current_g.l_hip_virtual || current_g.r_hip_virtual) {
-                cv::putText(frame, "HIP: virtual fallback active",
-                    {20, frame.rows-70},
-                    cv::FONT_HERSHEY_SIMPLEX, 0.55, {255,165,0}, 1);
+            GaitResult shown = current_g;
+            occ = occlusion_tracker.update(&dets[0], &current_g, capture_ms);
+            occlusion::Tracker::apply(occ, shown);
+            draw_metrics(shown, lm, occ);
+        } else if (quality.status == frame_quality::Status::LOW_CONFIDENCE && !dets.empty()
+                   && dets[0].conf >= quality_config.person_conf_min) {
+            // A person is there but a leg is hidden: show what can still be measured.
+            // Not logged to CSV and not used by the test keys (current_g is cleared).
+            current_g = GaitResult{};
+            auto& lm = dets[0].kpts;
+            const GaitResult partial = compute_gait(lm);
+            occ = occlusion_tracker.update(&dets[0], &partial, capture_ms);
+            GaitResult shown = partial;
+            occlusion::Tracker::apply(occ, shown);
+            if (occ.mode == occlusion::Mode::CAMERA_DEGRADED) {
+                cv::putText(frame, "Camera degraded: legs hidden, use IMU gait phase", {20,40},
+                    cv::FONT_HERSHEY_SIMPLEX, 0.8, {0,0,255}, 2);
+            } else {
+                draw_metrics(shown, lm, occ);
             }
-
-            // Draw skeleton
-            auto line = [&](int a, int b) {
-                if (lm[a].score > 0.3f && lm[b].score > 0.3f)
-                    cv::line(frame,
-                        {(int)lm[a].x, (int)lm[a].y},
-                        {(int)lm[b].x, (int)lm[b].y},
-                        {0,200,255}, 2);
-            };
-            line(11,12); line(11,13); line(13,15);
-            line(12,14); line(14,16);
-
-            // Overlay metrics
-            auto txt = [&](const std::string& s, int y,
-                           cv::Scalar c = {0,255,0}) {
-                cv::putText(frame, s, {20,y},
-                    cv::FONT_HERSHEY_SIMPLEX, 0.7, c, 2);
-            };
-            txt("L Knee: " + (current_g.l_knee_angle >= 0
-                ? std::to_string((int)current_g.l_knee_angle)+" deg"
-                : "N/A"), 40);
-            txt("R Knee: " + (current_g.r_knee_angle >= 0
-                ? std::to_string((int)current_g.r_knee_angle)+" deg"
-                : "N/A"), 70);
-            txt("Phase: " + current_g.squat_phase, 100,
-                current_g.squat_phase == "STANDING"   ? cv::Scalar{0,255,0}   :
-                current_g.squat_phase == "SEMI_SQUAT" ? cv::Scalar{0,200,255} :
-                                                        cv::Scalar{0,100,255});
-            txt("L compress: "
-                + std::to_string((int)(current_g.l_leg_compression*100))+"%", 130);
-            txt("R compress: "
-                + std::to_string((int)(current_g.r_leg_compression*100))+"%", 160);
-            txt("Symmetry: " + (current_g.symmetry_index >= 0
-                ? std::to_string((int)current_g.symmetry_index)+"%"
-                : "N/A"), 190,
-                current_g.symmetry_index < 10.f
-                    ? cv::Scalar{0,255,0} : cv::Scalar{0,100,255});
-            txt("Infer: "+std::to_string((int)inf_ms)+" ms", 220, {180,180,180});
-
-            if (lm[11].score < 0.5f || lm[12].score < 0.5f)
-                cv::putText(frame, "WARNING: Hip not visible",
-                    {20, frame.rows-50},
-                    cv::FONT_HERSHEY_SIMPLEX, 0.65, {0,0,255}, 2);
-
         } else {
             // Never let an old gait result survive: test keys A/B/E/D read current_g.
             current_g = GaitResult{};
+            occ = occlusion_tracker.update(nullptr, nullptr, capture_ms);
             const char* message =
                 quality.status == frame_quality::Status::NO_PERSON      ? "No person detected" :
                 quality.status == frame_quality::Status::LOW_CONFIDENCE ? "Low confidence: legs not clearly visible" :
@@ -635,6 +680,16 @@ int main(int argc, char* argv[]) {
             if (!quality.reasons.empty())
                 cv::putText(frame, quality.reasons.front(), {20,70},
                     cv::FONT_HERSHEY_SIMPLEX, 0.55, {0,0,255}, 1);
+        }
+
+        ++mode_counts[static_cast<int>(occ.mode)];
+        if (occ.mode != last_mode) {
+            std::cout << ">> [occlusion] " << occlusion::to_string(last_mode) << " -> "
+                      << occlusion::to_string(occ.mode)
+                      << " | L " << occlusion::to_string(occ.left.state)
+                      << " R " << occlusion::to_string(occ.right.state)
+                      << (occ.use_imu_fallback ? " | IMU fallback requested" : "") << "\n";
+            last_mode = occ.mode;
         }
 
         // Show logged tests count
@@ -799,6 +854,11 @@ int main(int argc, char* argv[]) {
     for (int s = 0; s < 5; ++s)
         std::cout << " " << frame_quality::to_string(static_cast<frame_quality::Status>(s))
                   << "=" << quality_counts[s];
+    std::cout << "\n";
+    std::cout << ">> Occlusion summary (after calibration):";
+    for (int m = 0; m < 3; ++m)
+        std::cout << " " << occlusion::to_string(static_cast<occlusion::Mode>(m))
+                  << "=" << mode_counts[m];
     std::cout << "\n";
 
     cap.release();
