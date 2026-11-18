@@ -10,12 +10,15 @@
 /* ---- Rates (Hz) ---- */
 #define IMU_SAMPLE_RATE_HZ 100
 #define FSR_SAMPLE_RATE_HZ 100
-#define BLE_SEND_RATE_HZ   50 /* used from phase 4 (ble_thread) */
+#define BLE_SEND_RATE_HZ   100 /* target: 1 notification per FSR sample */
 
 /* ---- Periods (ms), derived. Do not define them anywhere else. ---- */
 #define IMU_INTERVAL_MS (1000 / IMU_SAMPLE_RATE_HZ)
 #define FSR_INTERVAL_MS (1000 / FSR_SAMPLE_RATE_HZ)
 #define BLE_INTERVAL_MS (1000 / BLE_SEND_RATE_HZ)
+
+/* ---- Queues ---- */
+#define FSR_QUEUE_DEPTH 20 /* samples = 200 ms of FSR data at 100 Hz */
 
 /* ---- Thread priorities: lower number = more important ---- */
 #define IMU_THREAD_PRIORITY 4

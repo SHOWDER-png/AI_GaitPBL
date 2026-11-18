@@ -6,7 +6,7 @@ raw data over BLE to the NXP i.MX95 host. This file defines the **target layout*
 **order of work**. Follow it step by step.
 
 ## 0. Read first (mandatory)
-1. `DOCKER_BUILD.md` - how to build (Docker, `west build -p always`, SDK version stated there)
+1. `WSL_BUILD.md` - how to build (WSL2 Ubuntu, SDK v3.3.4)
 2. `FIRMWARE_GUIDE.md` - older notes on FSR/IMU/threads. This README supersedes its file layout;
    update that guide after the restructure so it matches.
 3. The existing sources: `src/main.c`, `fsr402.*`, and the teammate's `gait_ble.*`.
@@ -16,7 +16,7 @@ raw data over BLE to the NXP i.MX95 host. This file defines the **target layout*
 ## 1. System context
 - One wireless node: BMI270 (on-board) + 6 FSR402 through ADS7128 (I2C) + BLE (Nordic UART / GATT).
 - Host (i.MX95, Python `bleak`) computes CoP and gait metrics. **The node sends raw values only.**
-- Thingy:53 has no on-board debugger: flash via `dfu_application.zip` (see `DOCKER_BUILD.md`).
+- Thingy:53 has no on-board debugger: flash via `dfu_application.zip` (see `WSL_BUILD.md`).
 
 ## 2. Target file structure
 
@@ -110,7 +110,7 @@ to match each module and make sure the project builds.
   I2C, sensor, and any ADC options already used. Do not remove existing options.
 - `sysbuild.conf`: keep it (Partition Manager + `ipc_radio` network core). Without it the
   network-core build fails (`undefined node label 's0_partition'`). Check it against the SDK
-  version in `DOCKER_BUILD.md`.
+  version in `WSL_BUILD.md`.
 - `app.overlay`: ADS7128 must be on an **external** I2C bus. `i2c1` is the Thingy:53 internal
   sensor bus (address 0x10 is already used there). See open decision D3.
 
@@ -146,7 +146,7 @@ Where the old code goes:
 - **D2 Rate mismatch.** FSR 100 Hz vs BLE 50 Hz: decimate or batch? Decide before `ble_thread.c`.
 - **D3 ADS7128 wiring.** Which Thingy:53 pins are SDA/SCL and what is the address-pin setting?
   Until known, the overlay cannot be finished.
-- **D4 SDK version.** Use the version in `DOCKER_BUILD.md`. Do not mix versions.
+- **D4 SDK version.** Use the version in `WSL_BUILD.md`. Do not mix versions.
 
 ## 10. Rules for the agent
 - Ask before deleting anything. Never touch `.git`, the SDK, or the Docker volume `ncs-data`.
@@ -158,6 +158,6 @@ Where the old code goes:
 
 ## 11. Definition of done
 - Tree matches section 2 (only files whose phase is finished).
-- `west build -p always` passes with the SDK in `DOCKER_BUILD.md`.
+- `west build -p always` passes with the SDK in `WSL_BUILD.md`.
 - IMU and 6 FSR values reach the host over BLE; no thread blocks; drops and late deadlines are counted.
 - `FIRMWARE_GUIDE.md` updated to the new layout.

@@ -1,6 +1,6 @@
 # Firmware guide: โค้ด `gait_node` ทำงานอย่างไร และแก้ตรงไหน
 
-อ่านไฟล์นี้ก่อนแก้โค้ดเซนเซอร์หรือ Bluetooth วิธี build อยู่ใน `DOCKER_BUILD.md`
+อ่านไฟล์นี้ก่อนแก้โค้ดเซนเซอร์หรือ Bluetooth วิธี build อยู่ใน `WSL_BUILD.md`
 
 สถานะ (2026-11-12): โค้ดชุดนี้ **build ผ่านบน NCS v3.3.4** แต่ส่วน FSR และ Bluetooth
 **ยังไม่ได้ทดสอบกับบอร์ดจริง**
@@ -191,6 +191,6 @@ CONFIG_GAIT_BLE=y        # Bluetooth (ต้องมีกลุ่ม CONFIG_B
 
 - เวอร์ชัน: **NCS v3.3.4** เท่านั้น ห้ามสลับกับ v3.4.0
 - บอร์ด: `thingy53/nrf5340/cpuapp` พร้อม `--sysbuild`
-- ขั้นตอนทั้งหมดอยู่ใน `DOCKER_BUILD.md`
+- ขั้นตอนทั้งหมดอยู่ใน `WSL_BUILD.md`
 - ไฟล์ที่ใช้ flash: `build\dfu_application.zip`
 - หลัง flash ต้องเห็นชื่อ `GaitNode` ในแอป nRF Connect

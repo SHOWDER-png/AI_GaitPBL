@@ -18,3 +18,6 @@ target_sources_ifdef(CONFIG_GAIT_PLANTAR app PRIVATE
 	src/plantar/fsr402.c
 	src/plantar/plantar_thread.c)
 target_sources_ifdef(CONFIG_GAIT_BLE app PRIVATE src/ble/gait_ble.c)
+if(CONFIG_GAIT_BLE AND CONFIG_GAIT_PLANTAR)
+	target_sources(app PRIVATE src/ble/ble_thread.c)
+endif()

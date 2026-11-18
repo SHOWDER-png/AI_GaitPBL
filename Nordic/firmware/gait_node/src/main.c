@@ -22,6 +22,9 @@
 #ifdef CONFIG_GAIT_BLE
 #include "ble/gait_ble.h"
 #endif
+#if defined(CONFIG_GAIT_BLE) && defined(CONFIG_GAIT_PLANTAR)
+#include "ble/ble_thread.h"
+#endif
 
 int main(void)
 {
@@ -67,6 +70,12 @@ int main(void)
 #ifdef CONFIG_GAIT_PLANTAR
 	if (fsr_ready) {
 		plantar_thread_start();
+	}
+#endif
+#if defined(CONFIG_GAIT_BLE) && defined(CONFIG_GAIT_PLANTAR)
+	/* Consumer starts only when both BLE and FSR are ready */
+	if (ble_rc == 0 && fsr_ready) {
+		ble_thread_start();
 	}
 #endif
 

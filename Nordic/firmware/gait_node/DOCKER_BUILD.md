@@ -1,3 +1,5 @@
+> **เลิกใช้แล้ว — ใช้ [WSL_BUILD.md](WSL_BUILD.md) แทน** (ไฟล์นี้เก็บไว้อ้างอิงเท่านั้น)
+
 # Build firmware `gait_node` ด้วย Docker (NCS v3.3.4)
 
 Build firmware ของ Thingy:53 ใน container Ubuntu โดยใช้ **nRF Connect SDK v3.3.4 เท่านั้น**
