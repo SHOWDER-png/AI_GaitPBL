@@ -1,44 +1,55 @@
-/* Thingy:53 gait_node overlay
+
+/*
+ * Thingy:53 gait_node overlay
  *
  * BMI270 remains enabled on the board's existing SPI bus.
  *
- * ADS7128 uses a dedicated external I2C bus on the Thingy:53 expansion pins:
+ * ADS7128 uses a dedicated external I2C bus
+ * on the Thingy:53 expansion pins:
  *   P0.04 = EXP_BOARD_PIN1 = SDA
  *   P0.05 = EXP_BOARD_PIN2 = SCL
  *
- * The ADS7128 board is left at its factory I2C address 0x10.
- * This is safe here because this overlay uses i2c0 on P0.04/P0.05,
- * not the Thingy:53 onboard-sensor i2c1 bus (which already has BMM150 at 0x10).
+ * ADS7128 factory I2C address: 0x10
+ *
+ * This overlay uses i2c0 on P0.04/P0.05,
+ * not the Thingy:53 onboard-sensor i2c1 bus.
  */
+
 #include <zephyr/dt-bindings/pinctrl/nrf-pinctrl.h>
+
 
 /* IMU owner: BMI270 on SPI, unchanged. */
 &bmi270 {
-	status = "okay";
+    status = "okay";
 };
 
-/* Dedicated external I2C bus for the ADS7128 breakout. */
+
+/* Dedicated external I2C bus for ADS7128. */
 &pinctrl {
-	i2c0_ext_default: i2c0_ext_default {
-		group1 {
-			psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
-				<NRF_PSEL(TWIM_SCL, 0, 5)>;
-		};
-	};
 
-	i2c0_ext_sleep: i2c0_ext_sleep {
-		group1 {
-			psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
-				<NRF_PSEL(TWIM_SCL, 0, 5)>;
-			low-power-enable;
-		};
-	};
+    i2c0_ext_default: i2c0_ext_default {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
+                    <NRF_PSEL(TWIM_SCL, 0, 5)>;
+        };
+    };
+
+    i2c0_ext_sleep: i2c0_ext_sleep {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
+                    <NRF_PSEL(TWIM_SCL, 0, 5)>;
+            low-power-enable;
+        };
+    };
 };
 
+
+/* External ADS7128 I2C controller. */
 &i2c0 {
-	status = "okay";
-	clock-frequency = <I2C_BITRATE_STANDARD>;
-	pinctrl-0 = <&i2c0_ext_default>;
-	pinctrl-1 = <&i2c0_ext_sleep>;
-	pinctrl-names = "default", "sleep";
+    status = "okay";
+    clock-frequency = <I2C_BITRATE_STANDARD>;
+
+    pinctrl-0 = <&i2c0_ext_default>;
+    pinctrl-1 = <&i2c0_ext_sleep>;
+    pinctrl-names = "default", "sleep";
 };

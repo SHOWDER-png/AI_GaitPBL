@@ -76,8 +76,9 @@ rsync -a --delete --exclude 'build*/' \
 
 # 2) เข้า toolchain แล้ว build (รันจากในโฟลเดอร์โปรเจกต์)
 cd ~/work/gait_node
+export ZEPHYR_BASE=~/ncs/v3.3.4/zephyr
 nrfutil sdk-manager toolchain launch --ncs-version v3.3.4 --install-dir ~/ncs -- \
-  west build -b thingy53/nrf5340/cpuapp --sysbuild -d build
+  west -z "$ZEPHYR_BASE" build -b thingy53/nrf5340/cpuapp --sysbuild -d build
 ```
 
 > `west` ต้องรันจากในโฟลเดอร์โปรเจกต์เสมอ ไม่ใช่จากโฟลเดอร์ SDK

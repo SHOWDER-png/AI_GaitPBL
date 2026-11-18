@@ -2,23 +2,17 @@
  * Plantar thread. The only code that touches the ADS7128 (I2C) after init.
  *
  * Producer: every FSR_INTERVAL_MS (10 ms) reads 6 channels, prints to the USB
- * console and pushes a struct plantar_sample into the FSR queue (FIFO, 20 deep).
- * ble_thread is the consumer.
+ * console and pushes a struct plantar_sample into the shared plantar queue
+ * (data/data_queue). ble_thread is the consumer.
  */
 #include <zephyr/kernel.h>
 #include <stdio.h>
+#include <errno.h>
 
+#include "data/data_queue.h"
 #include "plantar/fsr402.h"
 #include "plantar/plantar_thread.h"
 #include "system/system_config.h"
-
-/* FIFO between this producer thread and ble_thread (the consumer). */
-K_MSGQ_DEFINE(fsr_msgq, sizeof(struct plantar_sample), FSR_QUEUE_DEPTH, 4);
-
-int plantar_queue_get(struct plantar_sample *s, k_timeout_t timeout)
-{
-	return k_msgq_get(&fsr_msgq, s, timeout);
-}
 
 static K_THREAD_STACK_DEFINE(fsr_stack, FSR_STACK_SIZE);
 static struct k_thread fsr_thread_data;
@@ -61,13 +55,13 @@ static void plantar_thread_fn(void *p1, void *p2, void *p3)
 		}
 
 		/* Queue full (consumer stalled/not connected): drop the OLDEST sample so
-		 * the queue always holds the newest 200 ms.
+		 * the queue always holds the newest data.
 		 */
-		if (k_msgq_put(&fsr_msgq, &ps, K_NO_WAIT) != 0) {
+		if (data_queue_put_plantar(&ps, K_NO_WAIT) != 0) {
 			struct plantar_sample old;
 
-			(void)k_msgq_get(&fsr_msgq, &old, K_NO_WAIT);
-			(void)k_msgq_put(&fsr_msgq, &ps, K_NO_WAIT);
+			(void)data_queue_get_plantar(&old, K_NO_WAIT);
+			(void)data_queue_put_plantar(&ps, K_NO_WAIT);
 		}
 	}
 }
@@ -77,6 +71,10 @@ int plantar_thread_start(void)
 	k_tid_t tid = k_thread_create(&fsr_thread_data, fsr_stack,
 				      K_THREAD_STACK_SIZEOF(fsr_stack), plantar_thread_fn,
 				      NULL, NULL, NULL, FSR_THREAD_PRIORITY, 0, K_NO_WAIT);
+
+	if (tid == NULL) {
+		return -ENOMEM;
+	}
 
 	k_thread_name_set(tid, "plantar");
 	return 0;

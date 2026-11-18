@@ -19,8 +19,9 @@ rsync -a --delete --exclude 'build*/' "$SRC/" "$WORK/"
 
 echo "== build ($NCS_VERSION, $BOARD) ${PRISTINE:+[pristine]}"
 cd "$WORK"
+export ZEPHYR_BASE="$NCS_DIR/$NCS_VERSION/zephyr"  # lets west find "build" outside the SDK workspace
 nrfutil sdk-manager toolchain launch --ncs-version "$NCS_VERSION" --install-dir "$NCS_DIR" -- \
-    west build -b "$BOARD" --sysbuild -d build $PRISTINE
+    west -z "$ZEPHYR_BASE" build -b "$BOARD" --sysbuild -d build $PRISTINE
 
 OUT="$SRC/build/wsl"
 mkdir -p "$OUT"

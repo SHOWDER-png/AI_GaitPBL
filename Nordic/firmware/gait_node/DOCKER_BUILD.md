@@ -1,5 +1,3 @@
-> **เลิกใช้แล้ว — ใช้ [WSL_BUILD.md](WSL_BUILD.md) แทน** (ไฟล์นี้เก็บไว้อ้างอิงเท่านั้น)
-
 # Build firmware `gait_node` ด้วย Docker (NCS v3.3.4)
 
 Build firmware ของ Thingy:53 ใน container Ubuntu โดยใช้ **nRF Connect SDK v3.3.4 เท่านั้น**
@@ -14,7 +12,7 @@ Build firmware ของ Thingy:53 ใน container Ubuntu โดยใช้ **
 
 - เปิด **Docker Desktop** ให้ทำงานอยู่
 - ต้องมีที่ว่างประมาณ **15 GB** บนไดรฟ์ที่ Docker เก็บข้อมูล ค่าเริ่มต้นคือไดรฟ์ C:
-  ถ้า C: เหลือน้อย ย้ายก่อนที่ Docker Desktop → Settings → Resources → Disk image location (เช่น `E:\docker`)
+  ถ้า C: เหลือน้อย ย้ายก่อนที่ Docker Desktop → Settings → Resources → Disk image location 
 - เปิด PowerShell
 
 ## ครั้งแรก (ทำครั้งเดียว ใช้เวลา 30–50 นาที)
