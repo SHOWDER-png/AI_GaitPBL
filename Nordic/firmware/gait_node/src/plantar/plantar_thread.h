@@ -1,8 +1,22 @@
-/* Plantar thread: decides WHEN to read the six FSR402 sensors (period: FSR_INTERVAL_MS). */
+
 #ifndef GAIT_PLANTAR_THREAD_H_
 #define GAIT_PLANTAR_THREAD_H_
 
-/* Start the periodic FSR thread. Call after fsr402_init() succeeded. Returns 0. */
+#include <stdint.h>
+#include <zephyr/kernel.h>
+
+#define PLANTAR_QUEUE_DEPTH 20
+
+typedef struct {
+    uint32_t t_ms;
+    uint16_t raw[6];
+} plantar_sample_t;
+
+/* Start periodic FSR sampling thread */
 int plantar_thread_start(void);
 
-#endif /* GAIT_PLANTAR_THREAD_H_ */
+/* Get one sample from the FSR queue */
+int plantar_get_sample(plantar_sample_t *sample,
+                       k_timeout_t timeout);
+
+#endif

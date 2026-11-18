@@ -1,75 +1,101 @@
-/*
- * Plantar thread. The only code that touches the ADS7128 (I2C) after init.
- *
- * Phase 3: the thread prints each reading to the USB console and, when BLE is
- * enabled, sends it straight to gait_ble, exactly as main() used to.
- * Phase 4 replaces both with a push into the FSR queue; ble_thread then sends.
- */
+
 #include <zephyr/kernel.h>
-#include <stdio.h>
+#include <zephyr/sys/printk.h>
+#include <stdint.h>
+#include <errno.h>
 
 #include "plantar/fsr402.h"
 #include "plantar/plantar_thread.h"
 #include "system/system_config.h"
 
-#ifdef CONFIG_GAIT_BLE
-#include "ble/gait_ble.h"
-#endif
-
-static K_THREAD_STACK_DEFINE(fsr_stack, FSR_STACK_SIZE);
+/* Sampling thread */
+static K_THREAD_STACK_DEFINE(
+    fsr_stack, FSR_STACK_SIZE);
 static struct k_thread fsr_thread_data;
 
-static void plantar_thread_fn(void *p1, void *p2, void *p3)
+/* Shared queue between sampling and BLE threads */
+K_MSGQ_DEFINE(
+    fsr_sample_queue,
+    sizeof(plantar_sample_t),
+    PLANTAR_QUEUE_DEPTH,
+    4
+);
+
+/* Sampling thread */
+static void plantar_thread_fn(
+    void *p1, void *p2, void *p3)
 {
-	ARG_UNUSED(p1);
-	ARG_UNUSED(p2);
-	ARG_UNUSED(p3);
+    ARG_UNUSED(p1);
+    ARG_UNUSED(p2);
+    ARG_UNUSED(p3);
+    int64_t next = k_uptime_get();
+    while (1) {
+        uint16_t raw[FSR402_CHANNEL_COUNT];
+        plantar_sample_t sample;
+        next += FSR_INTERVAL_MS;
+        /* Maintain fixed sampling interval */
+        k_sleep(K_TIMEOUT_ABS_MS(next));
+        /* Skip missed periods instead of burst reading */
+        if (k_uptime_get() > next + FSR_INTERVAL_MS) {
+            next = k_uptime_get();
+        }
 
-	int64_t next = k_uptime_get();
-
-	while (1) {
-		uint16_t raw[FSR402_CHANNEL_COUNT];
-		uint32_t t_ms;
-		int rc;
-
-		next += FSR_INTERVAL_MS;
-		k_sleep(K_TIMEOUT_ABS_MS(next));
-
-		/* Fell far behind: skip ahead instead of bursting. */
-		if (k_uptime_get() > next + FSR_INTERVAL_MS) {
-			next = k_uptime_get();
-		}
-
-		t_ms = k_uptime_get_32();
-		rc = fsr402_read_all(raw);
-		if (rc != 0) {
-			printf("FSR read failed: rc=%d\n", rc);
-			continue;
-		}
-
-		printf("FSR,t_ms=%u,LH=%u,LB=%u,LT=%u,RH=%u,RB=%u,RT=%u\n", t_ms,
-		       raw[0], raw[1], raw[2], raw[3], raw[4], raw[5]);
-
-#ifdef CONFIG_GAIT_BLE
-		/* Temporary (until phase 4). Returns -ENOTCONN, ignored, while no
-		 * central has subscribed.
-		 */
-		struct gait_plantar_sample ps = { .t_ms = t_ms };
-
-		for (int i = 0; i < GAIT_FSR_COUNT; i++) {
-			ps.raw[i] = (int16_t)raw[i];
-		}
-		(void)gait_ble_send_plantar(&ps);
-#endif
-	}
+        /* Record timestamp before ADC reading */
+        sample.t_ms = k_uptime_get_32();
+        /* Read all six FSR sensors */
+        int rc = fsr402_read_all(raw);
+        if (rc != 0) {
+            printk("FSR read error: %d\n", rc);
+            continue;
+        }
+        /* Copy sensor data */
+        for (int i = 0; i < FSR402_CHANNEL_COUNT; i++) {
+            sample.raw[i] = raw[i];
+        }
+        /* Push sample into queue without blocking */
+        rc = k_msgq_put(
+            &fsr_sample_queue,
+            &sample,
+            K_NO_WAIT
+        );
+        if (rc != 0) {
+            printk("FSR queue full: sample dropped\n");
+        }
+    }
 }
 
+/* Start sampling thread */
 int plantar_thread_start(void)
 {
-	k_tid_t tid = k_thread_create(&fsr_thread_data, fsr_stack,
-				      K_THREAD_STACK_SIZEOF(fsr_stack), plantar_thread_fn,
-				      NULL, NULL, NULL, FSR_THREAD_PRIORITY, 0, K_NO_WAIT);
+    k_tid_t tid = k_thread_create(
+        &fsr_thread_data,
+        fsr_stack,
+        K_THREAD_STACK_SIZEOF(fsr_stack),
+        plantar_thread_fn,
+        NULL, NULL, NULL,
+        FSR_THREAD_PRIORITY,
+        0,
+        K_NO_WAIT
+    );
 
-	k_thread_name_set(tid, "plantar");
-	return 0;
+    if (tid == NULL) {
+        return -ENOMEM;
+    }
+    k_thread_name_set(tid, "plantar");
+    return 0;
+}
+
+/* Allow another thread to retrieve FSR samples */
+int plantar_get_sample(
+    plantar_sample_t *sample,
+    k_timeout_t timeout)
+{
+    if (sample == NULL) {
+        return -EINVAL;
+    }
+    return k_msgq_get(
+        &fsr_sample_queue,
+        sample,
+        timeout
+    );
 }
