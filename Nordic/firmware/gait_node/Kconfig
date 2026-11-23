@@ -23,6 +23,15 @@ config GAIT_BLE
 	  Off until protocol/BLE_GAIT_PROTOCOL.md is agreed. When off, samples
 	  are printed to the USB serial console instead.
 
+config GAIT_MOCK_DATA
+	bool "Send fake IMU/FSR data over BLE (no sensors needed)"
+	default n
+	depends on GAIT_BLE && GAIT_PLANTAR
+	help
+	  Skips imu_init()/fsr402_init() and the real sensor threads. A mock thread
+	  generates a walking-like signal (stride 1.1 s) at 100 Hz instead. Use it to
+	  test BLE and the receiver. Turn it off for real measurements.
+
 endmenu
 
 source "Kconfig.zephyr"

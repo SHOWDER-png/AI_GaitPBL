@@ -31,9 +31,21 @@
 #define GAIT_PLANTAR_UUID_VAL \
 	BT_UUID_128_ENCODE(0xe6d1e9db, 0xbe0e, 0x4889, 0xb490, 0x7643045692db)
 
+/* Control (write 1 byte: 0 stop, 1 start, 2 calibrate) and Status (read 1 byte: 0 idle, 1 streaming) */
+#define GAIT_CTRL_UUID_VAL \
+	BT_UUID_128_ENCODE(0xe6d1e9dc, 0xbe0e, 0x4889, 0xb490, 0x7643045692db)
+#define GAIT_STAT_UUID_VAL \
+	BT_UUID_128_ENCODE(0xe6d1e9dd, 0xbe0e, 0x4889, 0xb490, 0x7643045692db)
+
 static const struct bt_uuid_128 gait_svc_uuid = BT_UUID_INIT_128(GAIT_SVC_UUID_VAL);
 static const struct bt_uuid_128 gait_imu_uuid = BT_UUID_INIT_128(GAIT_IMU_UUID_VAL);
 static const struct bt_uuid_128 gait_plantar_uuid = BT_UUID_INIT_128(GAIT_PLANTAR_UUID_VAL);
+static const struct bt_uuid_128 gait_ctrl_uuid = BT_UUID_INIT_128(GAIT_CTRL_UUID_VAL);
+static const struct bt_uuid_128 gait_stat_uuid = BT_UUID_INIT_128(GAIT_STAT_UUID_VAL);
+
+/* Streaming is ON by default; the central can switch it with the Control characteristic. */
+static volatile bool streaming = true;
+static gait_cmd_cb_t cmd_cb;
 
 /* Set when the central switches notifications on for that characteristic */
 static volatile bool imu_subscribed;
@@ -56,11 +68,52 @@ static void plantar_ccc_changed(const struct bt_gatt_attr *attr, uint16_t value)
 	printf("BLE: plantar notifications %s\n", plantar_subscribed ? "ON" : "OFF");
 }
 
+/* Control write: exactly 1 byte, value 0..2. Anything else is rejected with an ATT error. */
+static ssize_t ctrl_write(struct bt_conn *conn, const struct bt_gatt_attr *attr,
+			  const void *buf, uint16_t len, uint16_t offset, uint8_t flags)
+{
+	ARG_UNUSED(conn);
+	ARG_UNUSED(attr);
+	ARG_UNUSED(flags);
+
+	if (offset != 0 || len != 1) {
+		return BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
+	}
+
+	uint8_t cmd = ((const uint8_t *)buf)[0];
+
+	if (cmd > GAIT_CMD_CALIBRATE) {
+		return BT_GATT_ERR(BT_ATT_ERR_VALUE_NOT_ALLOWED);
+	}
+
+	if (cmd == GAIT_CMD_START) {
+		streaming = true;
+	} else if (cmd == GAIT_CMD_STOP) {
+		streaming = false;
+	}
+	printf("BLE: command %u (streaming %s)\n", cmd, streaming ? "ON" : "OFF");
+
+	if (cmd_cb) {
+		cmd_cb((enum gait_cmd)cmd);
+	}
+	return len;
+}
+
+static ssize_t stat_read(struct bt_conn *conn, const struct bt_gatt_attr *attr,
+			 void *buf, uint16_t len, uint16_t offset)
+{
+	uint8_t status = streaming ? 1 : 0;
+
+	return bt_gatt_attr_read(conn, attr, buf, len, offset, &status, sizeof(status));
+}
+
 /*
  * Attribute table index:
  *   [0] service
  *   [1] IMU characteristic declaration   [2] IMU value      [3] IMU CCC
  *   [4] plantar characteristic declaration [5] plantar value [6] plantar CCC
+ *   [7] control declaration [8] control value
+ *   [9] status declaration  [10] status value
  */
 BT_GATT_SERVICE_DEFINE(gait_svc,
 	BT_GATT_PRIMARY_SERVICE(&gait_svc_uuid),
@@ -70,6 +123,11 @@ BT_GATT_SERVICE_DEFINE(gait_svc,
 	BT_GATT_CHARACTERISTIC(&gait_plantar_uuid.uuid, BT_GATT_CHRC_NOTIFY,
 			       BT_GATT_PERM_NONE, NULL, NULL, NULL),
 	BT_GATT_CCC(plantar_ccc_changed, BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+	BT_GATT_CHARACTERISTIC(&gait_ctrl_uuid.uuid,
+			       BT_GATT_CHRC_WRITE | BT_GATT_CHRC_WRITE_WITHOUT_RESP,
+			       BT_GATT_PERM_WRITE, NULL, ctrl_write, NULL),
+	BT_GATT_CHARACTERISTIC(&gait_stat_uuid.uuid, BT_GATT_CHRC_READ,
+			       BT_GATT_PERM_READ, stat_read, NULL, NULL),
 );
 
 #define IMU_ATTR     (&gait_svc.attrs[1])
@@ -130,6 +188,16 @@ BT_CONN_CB_DEFINE(gait_conn_callbacks) = {
 	.recycled = recycled,
 };
 
+void gait_ble_set_cmd_callback(gait_cmd_cb_t cb)
+{
+	cmd_cb = cb;
+}
+
+bool gait_ble_streaming(void)
+{
+	return streaming;
+}
+
 int gait_ble_init(void)
 {
 	int err = bt_enable(NULL);
@@ -153,6 +221,9 @@ int gait_ble_send_imu(const struct gait_imu_sample *s)
 {
 	uint8_t pkt[GAIT_PACKET_LEN];
 
+	if (!streaming) {
+		return -EPERM; /* stopped by the Control characteristic */
+	}
 	if (!imu_subscribed) {
 		return -ENOTCONN;
 	}
@@ -171,6 +242,9 @@ int gait_ble_send_plantar(const struct gait_plantar_sample *s)
 {
 	uint8_t pkt[GAIT_PACKET_LEN];
 
+	if (!streaming) {
+		return -EPERM; /* stopped by the Control characteristic */
+	}
 	if (!plantar_subscribed) {
 		return -ENOTCONN;
 	}

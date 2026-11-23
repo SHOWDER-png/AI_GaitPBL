@@ -16,7 +16,8 @@ the IMU and plantar owners.
 | Gait service | `e6d1e9d9-be0e-4889-b490-7643045692db` | — | — |
 | IMU data | `e6d1e9da-be0e-4889-b490-7643045692db` | Notify | IMU packet below |
 | Plantar data | `e6d1e9db-be0e-4889-b490-7643045692db` | Notify | Plantar packet below |
-| Control | _TBD_ | Write | start/stop streaming, set rates (later) |
+| Control | `e6d1e9dc-be0e-4889-b490-7643045692db` | Write (1 byte) | `0` stop, `1` start, `2` calibrate (stub). Other values/lengths are rejected with an ATT error |
+| Status | `e6d1e9dd-be0e-4889-b490-7643045692db` | Read (1 byte) | `0` idle (stopped), `1` streaming |
 
 ## Packets (little-endian)
 

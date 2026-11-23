@@ -54,7 +54,7 @@ static void consume_plantar_data(
         /* Send FSR notification */
         rc = gait_ble_send_plantar(&ps);
 
-        if (rc != 0 && rc != -ENOTCONN) {
+        if (rc != 0 && rc != -ENOTCONN && rc != -EPERM) {
             printk("BLE: plantar send failed: %d\n", rc);
         }
     }

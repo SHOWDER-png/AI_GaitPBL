@@ -29,6 +29,9 @@
 #if defined(CONFIG_GAIT_BLE) && defined(CONFIG_GAIT_PLANTAR)
 #include "ble/ble_thread.h"
 #endif
+#ifdef CONFIG_GAIT_MOCK_DATA
+#include "mock/mock_thread.h"
+#endif
 
 int main(void)
 {
@@ -50,6 +53,11 @@ int main(void)
 
     printf("\n=== GAIT NODE STARTING ===\n");
 
+#ifdef CONFIG_GAIT_MOCK_DATA
+    printf("MOCK DATA MODE: sensors are NOT read, BLE sends fake data\n");
+    bool imu_ready = false;
+    bool fsr_ready = true; /* lets ble_thread start */
+#else
 #ifdef CONFIG_GAIT_IMU
     bool imu_ready = (imu_init() == 0);
 
@@ -65,6 +73,7 @@ int main(void)
            "FSR402 ADS7128 initialized\n" :
            "FSR402 ADS7128 initialization failed\n");
 #endif
+#endif /* CONFIG_GAIT_MOCK_DATA */
 
 #ifdef CONFIG_GAIT_BLE
     /* Initialize Bluetooth */
@@ -74,6 +83,12 @@ int main(void)
 
     if (!ble_ready) {
         printf("BLE init failed: rc=%d\n", ble_rc);
+    }
+#endif
+
+#ifdef CONFIG_GAIT_MOCK_DATA
+    if (mock_thread_start() == 0) {
+        printf("Mock data thread started\n");
     }
 #endif
 
@@ -89,7 +104,7 @@ int main(void)
     }
 #endif
 
-#ifdef CONFIG_GAIT_PLANTAR
+#if defined(CONFIG_GAIT_PLANTAR) && !defined(CONFIG_GAIT_MOCK_DATA)
     if (fsr_ready) {
         int rc = plantar_thread_start();
 

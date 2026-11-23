@@ -32,3 +32,9 @@ target_sources_ifdef(CONFIG_GAIT_BLE app PRIVATE
 if(CONFIG_GAIT_BLE AND CONFIG_GAIT_PLANTAR)
     target_sources(app PRIVATE src/ble/ble_thread.c)
 endif()
+
+# Fake data source for BLE testing without sensors (see Kconfig GAIT_MOCK_DATA)
+target_sources_ifdef(CONFIG_GAIT_MOCK_DATA app PRIVATE
+    src/mock/mock_signal.c
+    src/mock/mock_thread.c
+)
