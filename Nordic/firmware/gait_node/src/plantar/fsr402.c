@@ -18,6 +18,7 @@
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/sys/printk.h>
+
 #include <errno.h>
 #include <stdint.h>
 
@@ -25,20 +26,20 @@
 
 /* ---------- ADS7128 configuration ---------- */
 
-#define ADS7128_I2C_ADDR       0x10
+#define ADS7128_I2C_ADDR          0x10
 
 /* I2C command opcodes */
-#define ADS7128_CMD_REG_READ   0x10
-#define ADS7128_CMD_REG_WRITE  0x08
+#define ADS7128_CMD_REG_READ      0x10
+#define ADS7128_CMD_REG_WRITE     0x08
 
 /* ADS7128 register addresses */
-#define ADS7128_REG_SYSTEM_STATUS  0x00
-#define ADS7128_REG_DATA_CFG       0x02
-#define ADS7128_REG_OSR_CFG        0x03
-#define ADS7128_REG_OPMODE_CFG     0x04
-#define ADS7128_REG_PIN_CFG        0x05
-#define ADS7128_REG_SEQUENCE_CFG   0x10
-#define ADS7128_REG_CHANNEL_SEL    0x11
+#define ADS7128_REG_SYSTEM_STATUS 0x00
+#define ADS7128_REG_DATA_CFG      0x02
+#define ADS7128_REG_OSR_CFG       0x03
+#define ADS7128_REG_OPMODE_CFG    0x04
+#define ADS7128_REG_PIN_CFG       0x05
+#define ADS7128_REG_SEQUENCE_CFG  0x10
+#define ADS7128_REG_CHANNEL_SEL   0x11
 
 /*
  * This implementation uses I2C controller i2c0.
@@ -47,6 +48,7 @@
  */
 static const struct device *const i2c_dev =
     DEVICE_DT_GET(DT_NODELABEL(i2c0));
+
 
 /* ---------- Low-level I2C functions ---------- */
 
@@ -62,8 +64,12 @@ static int ads7128_write_reg(uint8_t reg, uint8_t value)
         value
     };
 
-    return i2c_write(i2c_dev, tx, sizeof(tx),
-                     ADS7128_I2C_ADDR);
+    return i2c_write(
+        i2c_dev,
+        tx,
+        sizeof(tx),
+        ADS7128_I2C_ADDR
+    );
 }
 
 /*
@@ -78,16 +84,25 @@ static int ads7128_read_reg(uint8_t reg, uint8_t *value)
         reg
     };
 
-    int ret = i2c_write(i2c_dev, tx, sizeof(tx),
-                        ADS7128_I2C_ADDR);
+    int ret = i2c_write(
+        i2c_dev,
+        tx,
+        sizeof(tx),
+        ADS7128_I2C_ADDR
+    );
 
     if (ret != 0) {
         return ret;
     }
 
-    return i2c_read(i2c_dev, value, 1,
-                    ADS7128_I2C_ADDR);
+    return i2c_read(
+        i2c_dev,
+        value,
+        1,
+        ADS7128_I2C_ADDR
+    );
 }
+
 
 /* ---------- Public FSR functions ---------- */
 
@@ -109,44 +124,62 @@ int fsr402_init(void)
 
     /* Check ADS7128 communication */
     ret = ads7128_read_reg(
-        ADS7128_REG_SYSTEM_STATUS, &status);
+        ADS7128_REG_SYSTEM_STATUS,
+        &status
+    );
 
     if (ret != 0) {
-        printk("FSR: ADS7128 I2C communication failed: %d\n",
-               ret);
+        printk(
+            "FSR: ADS7128 I2C communication failed: %d\n",
+            ret
+        );
         return ret;
     }
 
-    printk("FSR: ADS7128 detected, status=0x%02X\n",
-           status);
+    printk(
+        "FSR: ADS7128 detected, status=0x%02X\n",
+        status
+    );
 
     /*
      * Configure normal ADC output:
      * - No fixed test pattern
      * - No appended channel/status bits
      */
-    ret = ads7128_write_reg(ADS7128_REG_DATA_CFG, 0x00);
+    ret = ads7128_write_reg(
+        ADS7128_REG_DATA_CFG,
+        0x00
+    );
 
     if (ret != 0) {
         return ret;
     }
 
     /* Disable averaging: direct 12-bit ADC result */
-    ret = ads7128_write_reg(ADS7128_REG_OSR_CFG, 0x00);
+    ret = ads7128_write_reg(
+        ADS7128_REG_OSR_CFG,
+        0x00
+    );
 
     if (ret != 0) {
         return ret;
     }
 
     /* Manual conversion mode */
-    ret = ads7128_write_reg(ADS7128_REG_OPMODE_CFG, 0x00);
+    ret = ads7128_write_reg(
+        ADS7128_REG_OPMODE_CFG,
+        0x00
+    );
 
     if (ret != 0) {
         return ret;
     }
 
     /* Configure all channels as analog inputs */
-    ret = ads7128_write_reg(ADS7128_REG_PIN_CFG, 0x00);
+    ret = ads7128_write_reg(
+        ADS7128_REG_PIN_CFG,
+        0x00
+    );
 
     if (ret != 0) {
         return ret;
@@ -154,7 +187,9 @@ int fsr402_init(void)
 
     /* Manual sequence mode */
     ret = ads7128_write_reg(
-        ADS7128_REG_SEQUENCE_CFG, 0x00);
+        ADS7128_REG_SEQUENCE_CFG,
+        0x00
+    );
 
     if (ret != 0) {
         return ret;
@@ -165,14 +200,17 @@ int fsr402_init(void)
     return 0;
 }
 
+
 /*
  * Read one ADC channel.
  *
  * channel = 0 to 7
  * raw_value = 12-bit ADC result (0 to 4095)
  */
-static int ads7128_read_channel(uint8_t channel,
-                                uint16_t *raw_value)
+static int ads7128_read_channel(
+    uint8_t channel,
+    uint16_t *raw_value
+)
 {
     uint8_t data[2];
     int ret;
@@ -186,7 +224,9 @@ static int ads7128_read_channel(uint8_t channel,
      * CHANNEL_SEL[3:0] = MANUAL_CHID
      */
     ret = ads7128_write_reg(
-        ADS7128_REG_CHANNEL_SEL, channel);
+        ADS7128_REG_CHANNEL_SEL,
+        channel
+    );
 
     if (ret != 0) {
         return ret;
@@ -197,8 +237,12 @@ static int ads7128_read_channel(uint8_t channel,
      * The ADS7128 starts conversion during the read frame.
      * It may stretch SCL while conversion is in progress.
      */
-    ret = i2c_read(i2c_dev, data, sizeof(data),
-                   ADS7128_I2C_ADDR);
+    ret = i2c_read(
+        i2c_dev,
+        data,
+        sizeof(data),
+        ADS7128_I2C_ADDR
+    );
 
     if (ret != 0) {
         return ret;
@@ -216,6 +260,7 @@ static int ads7128_read_channel(uint8_t channel,
     return 0;
 }
 
+
 /*
  * Read all six FSR402 sensors.
  *
@@ -226,7 +271,9 @@ static int ads7128_read_channel(uint8_t channel,
  * raw[4] = Right Ball (A4)
  * raw[5] = Right Toe  (A5)
  */
-int fsr402_read_all(uint16_t raw[FSR402_CHANNEL_COUNT])
+int fsr402_read_all(
+    uint16_t raw[FSR402_CHANNEL_COUNT]
+)
 {
     int ret;
 
@@ -238,7 +285,10 @@ int fsr402_read_all(uint16_t raw[FSR402_CHANNEL_COUNT])
          channel < FSR402_CHANNEL_COUNT;
          channel++) {
 
-        ret = ads7128_read_channel(channel, &raw[channel]);
+        ret = ads7128_read_channel(
+            channel,
+            &raw[channel]
+        );
 
         if (ret != 0) {
             return ret;

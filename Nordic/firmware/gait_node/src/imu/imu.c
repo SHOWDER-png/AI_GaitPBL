@@ -7,6 +7,7 @@
 #include <zephyr/drivers/sensor.h>
 
 #include "imu/imu.h"
+#include "system/system_config.h"
 
 static const struct device *const imu_dev = DEVICE_DT_GET_ONE(bosch_bmi270);
 
@@ -29,12 +30,12 @@ int imu_init(void)
 	err |= set_attr(SENSOR_CHAN_ACCEL_XYZ, SENSOR_ATTR_FULL_SCALE, 2);      /* g */
 	err |= set_attr(SENSOR_CHAN_ACCEL_XYZ, SENSOR_ATTR_OVERSAMPLING, 1);
 	err |= set_attr(SENSOR_CHAN_ACCEL_XYZ, SENSOR_ATTR_SAMPLING_FREQUENCY,
-			CONFIG_GAIT_IMU_RATE_HZ);
+			IMU_SAMPLE_RATE_HZ);
 
 	err |= set_attr(SENSOR_CHAN_GYRO_XYZ, SENSOR_ATTR_FULL_SCALE, 500);     /* dps */
 	err |= set_attr(SENSOR_CHAN_GYRO_XYZ, SENSOR_ATTR_OVERSAMPLING, 1);
 	err |= set_attr(SENSOR_CHAN_GYRO_XYZ, SENSOR_ATTR_SAMPLING_FREQUENCY,
-			CONFIG_GAIT_IMU_RATE_HZ);
+			IMU_SAMPLE_RATE_HZ);
 
 	return err ? -EIO : 0;
 }

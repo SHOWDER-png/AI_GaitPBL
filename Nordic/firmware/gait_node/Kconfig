@@ -8,11 +8,6 @@ config GAIT_IMU
 	default y
 	select SENSOR
 
-config GAIT_IMU_RATE_HZ
-	int "IMU sample rate (Hz)"
-	default 100
-	depends on GAIT_IMU
-
 config GAIT_PLANTAR
 	bool "FSR 402 plantar pressure module via Adafruit ADS7128 (I2C)"
 	default n
@@ -21,17 +16,21 @@ config GAIT_PLANTAR
 	  Enable the six-channel FSR402 interface using the Adafruit ADS7128
 	  8-channel, 12-bit ADC over the dedicated external I2C bus.
 
-config GAIT_PLANTAR_RATE_HZ
-	int "Plantar sample rate (Hz)"
-	default 50
-	depends on GAIT_PLANTAR
-
 config GAIT_BLE
 	bool "BLE streaming to the i.MX95 (src/ble)"
 	default n
 	help
 	  Off until protocol/BLE_GAIT_PROTOCOL.md is agreed. When off, samples
 	  are printed to the USB serial console instead.
+
+config GAIT_MOCK_DATA
+	bool "Send fake IMU/FSR data over BLE (no sensors needed)"
+	default n
+	depends on GAIT_BLE && GAIT_PLANTAR
+	help
+	  Skips imu_init()/fsr402_init() and the real sensor threads. A mock thread
+	  generates a walking-like signal (stride 1.1 s) at 100 Hz instead. Use it to
+	  test BLE and the receiver. Turn it off for real measurements.
 
 endmenu
 

@@ -11,4 +11,4 @@ measured. When an experiment works, move the code into `../gait_node/src/<area>/
 |---|---|---|
 | `imu_bmi270_c29/` | IMU (Kaan) | Done: BMI270 identity, axes, units, ~94 Hz observed (see `imu_config.yaml`) |
 | `plantar_ads1115/` | Plantar | Not started |
-| `ble_hello/` | Nordic | Not started |
+| `ble_hello/` | Nordic | Code written, not yet run on hardware |
